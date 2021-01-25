@@ -2,15 +2,13 @@
 
 declare(strict_types=1);
 
-namespace SixtyEightPublishers\ImageBundle\Storage\ExternalAssociation;
+namespace SixtyEightPublishers\FileBundle\Storage\ExternalAssociation;
 
-use Nette;
-use Doctrine;
+use Traversable;
+use Doctrine\Common\Collections\ArrayCollection;
 
-class ReferenceCollection implements IReferenceCollection
+class ReferenceCollection implements ReferenceCollectionInterface
 {
-	use Nette\SmartObject;
-
 	/** @var \Doctrine\Common\Collections\ArrayCollection  */
 	private $inner;
 
@@ -19,10 +17,8 @@ class ReferenceCollection implements IReferenceCollection
 	 */
 	public function __construct(array $references = [])
 	{
-		$this->inner = new Doctrine\Common\Collections\ArrayCollection($references);
+		$this->inner = new ArrayCollection($references);
 	}
-
-	/********** interface \SixtyEightPublishers\ImageBundle\Storage\ExternalAssociation\IReferenceCollection **********/
 
 	/**
 	 * {@inheritDoc}
@@ -47,7 +43,7 @@ class ReferenceCollection implements IReferenceCollection
 
 		array_unshift($items, $reference);
 
-		$this->inner = new Doctrine\Common\Collections\ArrayCollection($items);
+		$this->inner = new ArrayCollection($items);
 	}
 
 	/**
@@ -71,7 +67,7 @@ class ReferenceCollection implements IReferenceCollection
 	 */
 	public function find(string $id): ?Reference
 	{
-		/** @var \SixtyEightPublishers\ImageBundle\Storage\ExternalAssociation\Reference $reference */
+		/** @var \SixtyEightPublishers\FileBundle\Storage\ExternalAssociation\Reference $reference */
 		foreach ($this as $reference) {
 			if ($reference->getId() !== $id) {
 				continue;
@@ -112,7 +108,7 @@ class ReferenceCollection implements IReferenceCollection
 	/**
 	 * {@inheritDoc}
 	 */
-	public function getIterator(): \Traversable
+	public function getIterator(): Traversable
 	{
 		return $this->inner->getIterator();
 	}
@@ -126,9 +122,9 @@ class ReferenceCollection implements IReferenceCollection
 	}
 
 	/**
-	 * @param \SixtyEightPublishers\ImageBundle\Storage\ExternalAssociation\Reference $reference
-	 * @param \SixtyEightPublishers\ImageBundle\Storage\ExternalAssociation\Reference $targetReference
-	 * @param bool                                                                    $equal
+	 * @param \SixtyEightPublishers\FileBundle\Storage\ExternalAssociation\Reference $reference
+	 * @param \SixtyEightPublishers\FileBundle\Storage\ExternalAssociation\Reference $targetReference
+	 * @param bool                                                                   $equal
 	 *
 	 * @return void
 	 */
@@ -146,7 +142,7 @@ class ReferenceCollection implements IReferenceCollection
 			return TRUE === $equal ? $k <= $index : $k < $index;
 		});
 
-		$this->inner = new Doctrine\Common\Collections\ArrayCollection(array_merge(
+		$this->inner = new ArrayCollection(array_merge(
 			$start->toArray(),
 			[$reference],
 			$end->toArray()

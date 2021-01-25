@@ -2,45 +2,54 @@
 
 declare(strict_types=1);
 
-namespace SixtyEightPublishers\ImageBundle\Storage\Manipulator\Sortable;
+namespace SixtyEightPublishers\FileBundle\Storage\Manipulator\Sortable;
 
-use Doctrine;
-use SixtyEightPublishers;
+use Doctrine\ORM\EntityManagerInterface;
+use SixtyEightPublishers\FileBundle\Entity\FileInterface;
+use SixtyEightPublishers\FileBundle\Storage\Options\OptionsInterface;
+use SixtyEightPublishers\DoctrinePersistence\TransactionFactoryInterface;
 
 abstract class AbstractPersistentSortableManipulator extends AbstractSortableManipulator
 {
-	/** @var \SixtyEightPublishers\DoctrinePersistence\Transaction\ITransactionFactory  */
+	/** @var \SixtyEightPublishers\DoctrinePersistence\TransactionFactoryInterface  */
 	private $transactionFactory;
 
 	/**
-	 * @param \SixtyEightPublishers\DoctrinePersistence\Transaction\ITransactionFactory $transactionFactory
+	 * @param \SixtyEightPublishers\DoctrinePersistence\TransactionFactoryInterface $transactionFactory
 	 */
-	public function __construct(SixtyEightPublishers\DoctrinePersistence\Transaction\ITransactionFactory $transactionFactory)
+	public function __construct(TransactionFactoryInterface $transactionFactory)
 	{
 		$this->transactionFactory = $transactionFactory;
 	}
 
 	/**
-	 * Return sorted image!
+	 * Return sorted file!
 	 *
-	 * @param \Doctrine\ORM\EntityManagerInterface                         $em
-	 * @param \SixtyEightPublishers\ImageBundle\Storage\Options\IOptions   $options
-	 * @param \SixtyEightPublishers\ImageBundle\DoctrineEntity\IImage      $sortedImage
-	 * @param \SixtyEightPublishers\ImageBundle\DoctrineEntity\IImage|NULL $previousImage
-	 * @param \SixtyEightPublishers\ImageBundle\DoctrineEntity\IImage|NULL $nextImage
+	 * @param \Doctrine\ORM\EntityManagerInterface                              $em
+	 * @param \SixtyEightPublishers\FileBundle\Storage\Options\OptionsInterface $options
+	 * @param \SixtyEightPublishers\FileBundle\Entity\FileInterface             $sortedFile
+	 * @param \SixtyEightPublishers\FileBundle\Entity\FileInterface|NULL        $previousFile
+	 * @param \SixtyEightPublishers\FileBundle\Entity\FileInterface|NULL        $nextFile
 	 *
-	 * @return \SixtyEightPublishers\ImageBundle\DoctrineEntity\IImage
+	 * @return \SixtyEightPublishers\FileBundle\Entity\FileInterface
 	 */
-	abstract public function doSortProcess(Doctrine\ORM\EntityManagerInterface $em, SixtyEightPublishers\ImageBundle\Storage\Options\IOptions $options, SixtyEightPublishers\ImageBundle\DoctrineEntity\IImage $sortedImage, ?SixtyEightPublishers\ImageBundle\DoctrineEntity\IImage $previousImage, ?SixtyEightPublishers\ImageBundle\DoctrineEntity\IImage $nextImage): SixtyEightPublishers\ImageBundle\DoctrineEntity\IImage;
+	abstract public function doSortProcess(EntityManagerInterface $em, OptionsInterface $options, FileInterface $sortedFile, ?FileInterface $previousFile, ?FileInterface $nextFile): FileInterface;
 
 	/**
 	 * {@inheritDoc}
 	 */
-	public function doSort(SixtyEightPublishers\ImageBundle\Storage\Options\IOptions $options, SixtyEightPublishers\ImageBundle\DoctrineEntity\IImage $sortedImage, ?SixtyEightPublishers\ImageBundle\DoctrineEntity\IImage $previousImage, ?SixtyEightPublishers\ImageBundle\DoctrineEntity\IImage $nextImage): bool
+	public function doSort(OptionsInterface $options, FileInterface $sortedFile, ?FileInterface $previousFile, ?FileInterface $nextFile): bool
 	{
-		$this->transactionFactory->create([$this, 'doSortProcess'])
-			->immutable($options, $sortedImage, $previousImage, $nextImage)
-			->run();
+		$transaction = $this->transactionFactory->create([$this, 'doSortProcess'], [
+			'options' => $options,
+			'sortedFile' => $sortedFile,
+			'previousFile' => $previousFile,
+			'nextFile' => $nextFile,
+		]);
+
+		$this->dispatchExtendTransactionEvent($transaction, $options);
+
+		$transaction->run();
 
 		return TRUE;
 	}

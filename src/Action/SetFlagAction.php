@@ -2,15 +2,14 @@
 
 declare(strict_types=1);
 
-namespace SixtyEightPublishers\ImageBundle\Action;
+namespace SixtyEightPublishers\FileBundle\Action;
 
-use Nette;
-use SixtyEightPublishers;
+use SixtyEightPublishers\FileBundle\Entity\FileInterface;
+use SixtyEightPublishers\FileBundle\Storage\DataStorageInterface;
+use SixtyEightPublishers\FileBundle\Storage\Manipulator\Flaggable\FlaggableManipulatorInterface;
 
-final class SetFlagAction implements IAction
+final class SetFlagAction implements ActionInterface
 {
-	use Nette\SmartObject;
-
 	/** @var string  */
 	private $name;
 
@@ -37,8 +36,6 @@ final class SetFlagAction implements IAction
 		$this->label = $label ?? $name;
 	}
 
-	/*************** interface \AppBundle\Control\ImageManager\Action\AbstractAction ***************/
-
 	/**
 	 * {@inheritdoc}
 	 */
@@ -58,14 +55,14 @@ final class SetFlagAction implements IAction
 	/**
 	 * {@inheritdoc}
 	 */
-	public function canBeUsed(SixtyEightPublishers\ImageBundle\Storage\IDataStorage $dataStorage): bool
+	public function isImplemented(DataStorageInterface $dataStorage): bool
 	{
-		if (!$dataStorage->hasManipulator(SixtyEightPublishers\ImageBundle\Storage\Manipulator\Flaggable\IFlaggableManipulator::class)) {
+		if (!$dataStorage->hasManipulator(FlaggableManipulatorInterface::class)) {
 			return FALSE;
 		}
 
-		/** @var \SixtyEightPublishers\ImageBundle\Storage\Manipulator\Flaggable\IFlaggableManipulator $manipulator */
-		$manipulator = $dataStorage->getManipulator(SixtyEightPublishers\ImageBundle\Storage\Manipulator\Flaggable\IFlaggableManipulator::class);
+		/** @var \SixtyEightPublishers\FileBundle\Storage\Manipulator\Flaggable\FlaggableManipulatorInterface $manipulator */
+		$manipulator = $dataStorage->getManipulator(FlaggableManipulatorInterface::class);
 
 		return $manipulator->isFlagSupported($this->flag);
 	}
@@ -73,8 +70,19 @@ final class SetFlagAction implements IAction
 	/**
 	 * {@inheritdoc}
 	 */
-	public function run(SixtyEightPublishers\ImageBundle\Storage\IDataStorage $dataStorage, SixtyEightPublishers\ImageBundle\DoctrineEntity\IImage $image): void
+	public function isApplicableOnFile(FileInterface $file, DataStorageInterface $dataStorage): bool
 	{
-		$dataStorage->manipulate(SixtyEightPublishers\ImageBundle\Storage\Manipulator\Flaggable\IFlaggableManipulator::class, $image, $this->flag, $this->unique);
+		/** @var \SixtyEightPublishers\FileBundle\Storage\Manipulator\Flaggable\FlaggableManipulatorInterface $manipulator */
+		$manipulator = $dataStorage->getManipulator(FlaggableManipulatorInterface::class);
+
+		return $manipulator->isFlagApplicableOnFile($this->flag, $file);
+	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function run(DataStorageInterface $dataStorage, FileInterface $file): void
+	{
+		$dataStorage->manipulate(FlaggableManipulatorInterface::class, $file, $this->flag, $this->unique);
 	}
 }

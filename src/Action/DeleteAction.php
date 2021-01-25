@@ -2,9 +2,11 @@
 
 declare(strict_types=1);
 
-namespace SixtyEightPublishers\ImageBundle\Action;
+namespace SixtyEightPublishers\FileBundle\Action;
 
-use SixtyEightPublishers;
+use SixtyEightPublishers\FileBundle\Entity\FileInterface;
+use SixtyEightPublishers\FileBundle\Storage\DataStorageInterface;
+use SixtyEightPublishers\FileBundle\Storage\Manipulator\Delete\DeleteManipulatorInterface;
 
 final class DeleteAction extends AbstractAction
 {
@@ -21,14 +23,14 @@ final class DeleteAction extends AbstractAction
 	 */
 	protected function getManipulatorClass(): string
 	{
-		return SixtyEightPublishers\ImageBundle\Storage\Manipulator\Delete\IDeleteManipulator::class;
+		return DeleteManipulatorInterface::class;
 	}
 
 	/**
 	 * {@inheritdoc}
 	 */
-	public function run(SixtyEightPublishers\ImageBundle\Storage\IDataStorage $dataStorage, SixtyEightPublishers\ImageBundle\DoctrineEntity\IImage $image): void
+	public function run(DataStorageInterface $dataStorage, FileInterface $file): void
 	{
-		$dataStorage->manipulate($this->getManipulatorClass(), $image);
+		$dataStorage->manipulate($this->getManipulatorClass(), $file);
 	}
 }

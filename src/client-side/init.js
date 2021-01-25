@@ -1,12 +1,12 @@
 $(function () {
-    let DropzoneFactory;
+	let DropzoneFactory;
 
-    if (typeof module !== "undefined" && module !== null) {
-        DropzoneFactory = require('./dropzone-factory');
-    } else {
-        DropzoneFactory = window.DropzoneFactory;
-    }
+	if (typeof module !== "undefined" && module !== null) {
+		DropzoneFactory = require('./dropzone-factory');
+	} else {
+		DropzoneFactory = window.DropzoneFactory;
+	}
 
-    // Init dropzones
-    DropzoneFactory.init();
+	// Init dropzones
+	DropzoneFactory.init();
 });

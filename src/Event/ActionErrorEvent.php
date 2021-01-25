@@ -2,29 +2,26 @@
 
 declare(strict_types=1);
 
-namespace SixtyEightPublishers\ImageBundle\Event;
+namespace SixtyEightPublishers\FileBundle\Event;
 
-use Nette;
-use Symfony;
-use SixtyEightPublishers;
+use Symfony\Contracts\EventDispatcher\Event;
+use SixtyEightPublishers\FileBundle\Exception\ExceptionInterface;
 
-final class ActionErrorEvent extends Symfony\Contracts\EventDispatcher\Event
+final class ActionErrorEvent extends Event
 {
-	use Nette\SmartObject;
-
-	public const NAME = 'image_bundle.action_error';
+	public const NAME = 'file_bundle.action_error';
 
 	/** @var string  */
 	private $actionName;
 
-	/** @var \SixtyEightPublishers\ImageBundle\Exception\IException  */
+	/** @var \SixtyEightPublishers\FileBundle\Exception\ExceptionInterface  */
 	private $exception;
 
 	/**
-	 * @param string                                                 $actionName
-	 * @param \SixtyEightPublishers\ImageBundle\Exception\IException $exception
+	 * @param string                                                        $actionName
+	 * @param \SixtyEightPublishers\FileBundle\Exception\ExceptionInterface $exception
 	 */
-	public function __construct(string $actionName, SixtyEightPublishers\ImageBundle\Exception\IException $exception)
+	public function __construct(string $actionName, ExceptionInterface $exception)
 	{
 		$this->actionName = $actionName;
 		$this->exception = $exception;
@@ -39,9 +36,9 @@ final class ActionErrorEvent extends Symfony\Contracts\EventDispatcher\Event
 	}
 
 	/**
-	 * @return \SixtyEightPublishers\ImageBundle\Exception\IException
+	 * @return \SixtyEightPublishers\FileBundle\Exception\ExceptionInterface
 	 */
-	public function getException(): SixtyEightPublishers\ImageBundle\Exception\IException
+	public function getException(): ExceptionInterface
 	{
 		return $this->exception;
 	}

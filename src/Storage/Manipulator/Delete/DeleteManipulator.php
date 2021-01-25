@@ -2,47 +2,52 @@
 
 declare(strict_types=1);
 
-namespace SixtyEightPublishers\ImageBundle\Storage\Manipulator\Delete;
+namespace SixtyEightPublishers\FileBundle\Storage\Manipulator\Delete;
 
-use Doctrine;
-use SixtyEightPublishers;
+use Doctrine\ORM\EntityManagerInterface;
+use SixtyEightPublishers\FileBundle\Entity\FileInterface;
+use SixtyEightPublishers\FileBundle\Storage\Options\OptionsInterface;
+use SixtyEightPublishers\DoctrinePersistence\TransactionFactoryInterface;
+use SixtyEightPublishers\FileBundle\Storage\Manipulator\AbstractManipulator;
+use SixtyEightPublishers\FileBundle\Storage\Manipulator\ExternalAssociationStorageAwareTrait;
+use SixtyEightPublishers\FileBundle\Storage\Manipulator\ExternalAssociationStorageAwareInterface;
 
-class DeleteManipulator extends SixtyEightPublishers\ImageBundle\Storage\Manipulator\AbstractManipulator implements IDeleteManipulator, SixtyEightPublishers\ImageBundle\Storage\Manipulator\IExternalAssociationStorageAware
+class DeleteManipulator extends AbstractManipulator implements DeleteManipulatorInterface, ExternalAssociationStorageAwareInterface
 {
-	use SixtyEightPublishers\ImageBundle\Storage\Manipulator\TExtendableTransaction,
-		SixtyEightPublishers\ImageBundle\Storage\Manipulator\TExternalAssociationStorageAware;
+	use ExternalAssociationStorageAwareTrait;
 
-	/** @var \SixtyEightPublishers\DoctrinePersistence\Transaction\ITransactionFactory  */
+	/** @var \SixtyEightPublishers\DoctrinePersistence\TransactionFactoryInterface  */
 	private $transactionFactory;
 
 	/**
-	 * @param \SixtyEightPublishers\DoctrinePersistence\Transaction\ITransactionFactory $transactionFactory
+	 * @param \SixtyEightPublishers\DoctrinePersistence\TransactionFactoryInterface $transactionFactory
 	 */
-	public function __construct(SixtyEightPublishers\DoctrinePersistence\Transaction\ITransactionFactory $transactionFactory)
+	public function __construct(TransactionFactoryInterface $transactionFactory)
 	{
 		$this->transactionFactory = $transactionFactory;
 	}
 
-	/********** interface \SixtyEightPublishers\ImageBundle\Storage\Manipulator\IDelete\DeleteManipulator **********/
-
 	/**
 	 * {@inheritdoc}
 	 */
-	public function __invoke(SixtyEightPublishers\ImageBundle\Storage\Options\IOptions $options, SixtyEightPublishers\ImageBundle\DoctrineEntity\IImage $image): void
+	public function __invoke(OptionsInterface $options, FileInterface $file): void
 	{
-		$transaction = $this->transactionFactory->create(static function (Doctrine\ORM\EntityManagerInterface $em, SixtyEightPublishers\ImageBundle\DoctrineEntity\IImage $image) {
-			$em->remove($image);
+		$transaction = $this->transactionFactory->create(static function (EntityManagerInterface $em, FileInterface $file) {
+			$em->remove($file);
 
-			return $image->getSource();
-		});
+			return $file->getSource();
+		}, [
+			'file' => $file,
+			'options' => $options,
+		]);
 
 		# External associations
 		$associationStorage = $this->getExternalAssociationStorage();
 
 		if (NULL !== $associationStorage) {
-			$transaction->finally(static function () use ($associationStorage, $image) {
+			$transaction->finally(static function () use ($associationStorage, $file) {
 				$references = $associationStorage->getReferences();
-				$reference = $references->find((string) $image->getId());
+				$reference = $references->find((string) $file->getId());
 
 				if (NULL === $reference) {
 					return;
@@ -53,9 +58,7 @@ class DeleteManipulator extends SixtyEightPublishers\ImageBundle\Storage\Manipul
 			});
 		}
 
-		$transaction = $transaction->immutable($image, $options);
-
-		$this->extendTransaction($transaction);
+		$this->dispatchExtendTransactionEvent($transaction, $options);
 
 		$transaction->run();
 	}

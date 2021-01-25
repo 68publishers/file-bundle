@@ -1,7 +1,7 @@
 {
-	"name": "68publishers/image-bundle",
-	"description": "Simple image management based on our image-storage for Nette Framework.",
-	"keywords": ["68publishers", "image", "images", "image-bundle", "nette"],
+	"name": "68publishers/file-bundle",
+	"description": "File management bundle based on our file-storage for Nette Framework.",
+	"keywords": ["68publishers", "files", "file-bundle", "images", "nette"],
 	"license": "MIT",
 	"authors": [
 		{
@@ -10,35 +10,61 @@
 		}
 	],
 	"require": {
-		"php": "^7.1",
-		"nette/di": "^2.4",
-		"nette/utils": "^2.4",
-		"nette/application": "^2.4",
-		"nette/forms": "^2.4",
-		"ramsey/uuid": "^3.8",
-		"68publishers/smart-nette-component": "^0.1",
-		"68publishers/doctrine-persistence": "^0.1",
-		"68publishers/image-storage": "^0.4",
-		"symfony/event-dispatcher": "^4.0",
-		"kdyby/doctrine": "^3.0",
-		"kdyby/translation": "^2.4"
+		"php": "^7.3",
+		"ext-fileinfo": "*",
+		"68publishers/doctrine-bridge": "^0.1.1",
+		"68publishers/doctrine-persistence": "^0.2",
+		"68publishers/event-dispatcher-extra": "^1.0",
+		"68publishers/file-storage": "^0.1",
+		"68publishers/smart-nette-component": "^0.2",
+		"68publishers/translation-bridge": "^1.2",
+		"nette/application": "^3.0.6",
+		"nette/di": "^3.0.3",
+		"nette/forms": "^3.0",
+		"nette/utils": "^3.0",
+		"ramsey/uuid": "^4.0"
 	},
 	"require-dev": {
+		"roave/security-advisories": "dev-master",
 		"friendsofphp/php-cs-fixer": "^2.0",
-		"nette/tester": "^1.7",
-		"68publishers/notification-bundle": "^0.1",
-		"gedmo/doctrine-extensions": "^2.4"
+		"nette/tester": "^2.3.4",
+		"68publishers/notification-bundle": "^0.2",
+		"gedmo/doctrine-extensions": "^2.4",
+		"68publishers/image-storage": "^0.5"
 	},
 	"suggest": {
-		"gedmo/doctrine-extensions": "If you want to use soft-deletable images.",
-		"68publishers/notification-bundle": "For automatic notifications (flash message, toastr) on image upload, deletion etc."
+		"gedmo/doctrine-extensions": "If you want to use soft-deletable files.",
+		"68publishers/notification-bundle": "For automatic notifications (flash message, toastr) on file upload, deletion etc.",
+		"68publishers/image-storage": "Use combination of file-storage and image-storage to better management of images!"
+	},
+	"conflict": {
+		"68publishers/image-storage": "<0.5"
 	},
 	"autoload": {
-		"classmap": ["src/"],
-		"files": []
+		"psr-4": {
+			"SixtyEightPublishers\\FileBundle\\": "src/"
+		}
 	},
 	"autoload-dev": {
-		"classmap": ["tests/"],
-		"files": []
+		"psr-4": {
+			"SixtyEightPublishers\\FileBundle\\Tests\\": "tests/"
+		}
+	},
+	"config": {
+		"sort-packages": true
+	},
+	"scripts": {
+		"tests": [
+			"@tests:lowest",
+			"@tests:highest"
+		],
+		"tests:lowest" : [
+			"@composer update --no-progress --prefer-dist --prefer-lowest --prefer-stable",
+			"vendor/bin/tester ./tests"
+		],
+		"tests:highest" : [
+			"@composer update --no-progress --prefer-dist --prefer-stable",
+			"vendor/bin/tester ./tests"
+		]
 	}
 }

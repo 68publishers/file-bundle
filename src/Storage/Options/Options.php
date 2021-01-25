@@ -2,19 +2,16 @@
 
 declare(strict_types=1);
 
-namespace SixtyEightPublishers\ImageBundle\Storage\Options;
+namespace SixtyEightPublishers\FileBundle\Storage\Options;
 
-use Nette;
-use SixtyEightPublishers;
+use Nette\Utils\Validators;
+use SixtyEightPublishers\FileBundle\Exception\InvalidStateException;
 
-final class Options implements IOptions
+final class Options implements OptionsInterface
 {
-	use Nette\SmartObject;
 
 	/** @var array  */
 	private $options = [];
-
-	/************** interface \SixtyEightPublishers\ImageBundle\Storage\Options\IOptions **************/
 
 	/**
 	 * {@inheritDoc}
@@ -22,14 +19,14 @@ final class Options implements IOptions
 	public function get(string $key, ?string $validator = NULL)
 	{
 		if (!$this->has($key)) {
-			throw new SixtyEightPublishers\ImageBundle\Exception\InvalidStateException(sprintf(
+			throw new InvalidStateException(sprintf(
 				'Value for key "%s" not found.',
 				$key
 			));
 		}
 
-		if (NULL !== $validator && !Nette\Utils\Validators::is($this->options[$key], $validator)) {
-			throw new SixtyEightPublishers\ImageBundle\Exception\InvalidStateException(sprintf(
+		if (NULL !== $validator && !Validators::is($this->options[$key], $validator)) {
+			throw new InvalidStateException(sprintf(
 				'Value for key "%s" doesn\'t match validator %s.',
 				$key,
 				$validator
@@ -48,7 +45,7 @@ final class Options implements IOptions
 			return FALSE;
 		}
 
-		return NULL === $validator ? TRUE : Nette\Utils\Validators::is($this->options[$key], $validator);
+		return NULL === $validator ? TRUE : Validators::is($this->options[$key], $validator);
 	}
 
 	/**

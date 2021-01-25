@@ -2,15 +2,20 @@
 
 declare(strict_types=1);
 
-namespace SixtyEightPublishers\ImageBundle\Storage\Manipulator\Flaggable;
+namespace SixtyEightPublishers\FileBundle\Storage\Manipulator\Flaggable;
 
-use SixtyEightPublishers;
+use SixtyEightPublishers\FileBundle\Entity\FileInterface;
+use SixtyEightPublishers\FileBundle\Exception\InvalidStateException;
+use SixtyEightPublishers\FileBundle\Storage\Options\OptionsInterface;
+use SixtyEightPublishers\FileBundle\Storage\Manipulator\AbstractManipulator;
+use SixtyEightPublishers\FileBundle\Storage\Manipulator\ExternalAssociationStorageAwareTrait;
+use SixtyEightPublishers\FileBundle\Storage\Manipulator\ExternalAssociationStorageAwareInterface;
 
-class FlaggableManipulator extends SixtyEightPublishers\ImageBundle\Storage\Manipulator\AbstractManipulator implements IFlaggableManipulator, SixtyEightPublishers\ImageBundle\Storage\Manipulator\IExternalAssociationStorageAware
+class FlaggableManipulator extends AbstractManipulator implements FlaggableManipulatorInterface, ExternalAssociationStorageAwareInterface
 {
-	use SixtyEightPublishers\ImageBundle\Storage\Manipulator\TExternalAssociationStorageAware;
+	use ExternalAssociationStorageAwareTrait;
 
-	/** @var callable[]  */
+	/** @var \SixtyEightPublishers\FileBundle\Storage\Manipulator\Flaggable\FlagHandlerInterface[]  */
 	private $handlers = [];
 
 	/**
@@ -24,17 +29,15 @@ class FlaggableManipulator extends SixtyEightPublishers\ImageBundle\Storage\Mani
 	}
 
 	/**
-	 * @param string   $flag
-	 * @param callable $callback
+	 * @param string                                                                              $flag
+	 * @param \SixtyEightPublishers\FileBundle\Storage\Manipulator\Flaggable\FlagHandlerInterface $handler
 	 *
 	 * @return void
 	 */
-	public function addHandler(string $flag, callable $callback): void
+	public function addHandler(string $flag, FlagHandlerInterface $handler): void
 	{
-		$this->handlers[$flag] = $callback;
+		$this->handlers[$flag] = $handler;
 	}
-
-	/********** interface \SixtyEightPublishers\ImageBundle\Storage\Manipulator\Flaggable\IFlaggableManipulator **********/
 
 	/**
 	 * {@inheritDoc}
@@ -47,16 +50,28 @@ class FlaggableManipulator extends SixtyEightPublishers\ImageBundle\Storage\Mani
 	/**
 	 * {@inheritDoc}
 	 */
-	public function __invoke(SixtyEightPublishers\ImageBundle\Storage\Options\IOptions $options, SixtyEightPublishers\ImageBundle\DoctrineEntity\IImage $image, string $flag, bool $unique = FALSE): void
+	public function isFlagApplicableOnFile(string $flag, FileInterface $file): bool
 	{
 		if (!$this->isFlagSupported($flag)) {
-			throw new SixtyEightPublishers\ImageBundle\Exception\InvalidStateException(sprintf(
+			return FALSE;
+		}
+
+		return $this->handlers[$flag]->canHandle($file);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function __invoke(OptionsInterface $options, FileInterface $file, string $flag, bool $unique = FALSE): void
+	{
+		if (!$this->isFlagApplicableOnFile($flag, $file)) {
+			throw new InvalidStateException(sprintf(
 				'Missing handler for flag "%s".',
 				$flag
 			));
 		}
 
-		$this->handlers[$flag]($options, $image, $unique);
+		$this->handlers[$flag]($options, $file, $unique);
 
 		$associationStorage = $this->getExternalAssociationStorage();
 
@@ -65,14 +80,14 @@ class FlaggableManipulator extends SixtyEightPublishers\ImageBundle\Storage\Mani
 		}
 
 		$references = $associationStorage->getReferences();
-		$selectedReference = $references->find((string) $image->getId());
+		$selectedReference = $references->find((string) $file->getId());
 
 		if (NULL === $selectedReference) {
 			return;
 		}
 
 		if (TRUE === $unique) {
-			/** @var \SixtyEightPublishers\ImageBundle\Storage\ExternalAssociation\Reference $reference */
+			/** @var \SixtyEightPublishers\FileBundle\Storage\ExternalAssociation\Reference $reference */
 			foreach ($references as $reference) {
 				$reference->removeMetadata($flag);
 			}

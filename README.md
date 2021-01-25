@@ -1,13 +1,13 @@
-# Image Bundle
+# File Bundle
 
-:city_sunset: Simple image management based on our [image-storage](https://github.com/68publishers/image-storage) for Nette Framework.
+:city_sunset: File management bundle based on our [file-storage](https://github.com/68publishers/file-storage) for Nette Framework.
 
 ## Installation
 
-The best way to install 68publishers/image-bundle is using Composer:
+The best way to install 68publishers/file-bundle is using Composer:
 
 ```bash
-composer require 68publishers/image-bundle
+composer require 68publishers/file-bundle
 ```
 
 ## Contributing

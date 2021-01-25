@@ -2,15 +2,13 @@
 
 declare(strict_types=1);
 
-namespace SixtyEightPublishers\ImageBundle\Action;
+namespace SixtyEightPublishers\FileBundle\Action;
 
-use Nette;
-use SixtyEightPublishers;
+use SixtyEightPublishers\FileBundle\Entity\FileInterface;
+use SixtyEightPublishers\FileBundle\Storage\DataStorageInterface;
 
-abstract class AbstractAction implements IAction
+abstract class AbstractAction implements ActionInterface
 {
-	use Nette\SmartObject;
-
 	/** @var string|NULL */
 	protected $label;
 
@@ -23,13 +21,6 @@ abstract class AbstractAction implements IAction
 	}
 
 	/**
-	 * @return string
-	 */
-	abstract protected function getManipulatorClass(): string;
-
-	/*************** interface \AppBundle\Control\ImageManager\Action\AbstractAction ***************/
-
-	/**
 	 * {@inheritdoc}
 	 */
 	public function getLabel(): string
@@ -40,10 +31,23 @@ abstract class AbstractAction implements IAction
 	/**
 	 * {@inheritdoc}
 	 */
-	public function canBeUsed(SixtyEightPublishers\ImageBundle\Storage\IDataStorage $dataStorage): bool
+	public function isImplemented(DataStorageInterface $dataStorage): bool
 	{
 		$manipulatorClass = $this->getManipulatorClass();
 
 		return $dataStorage->hasManipulator($manipulatorClass);
 	}
+
+	/**
+	 * {@inheritdoc}
+	 */
+	public function isApplicableOnFile(FileInterface $file, DataStorageInterface $dataStorage): bool
+	{
+		return TRUE;
+	}
+
+	/**
+	 * @return string
+	 */
+	abstract protected function getManipulatorClass(): string;
 }

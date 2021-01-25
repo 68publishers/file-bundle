@@ -2,15 +2,14 @@
 
 declare(strict_types=1);
 
-namespace SixtyEightPublishers\ImageBundle\Storage\ExternalAssociation;
+namespace SixtyEightPublishers\FileBundle\Storage\ExternalAssociation;
 
-use Nette;
-use SixtyEightPublishers;
+use Nette\Http\Session;
+use Nette\Http\SessionSection;
+use SixtyEightPublishers\FileBundle\Exception\InvalidStateException;
 
-class SessionAssociationStorage implements IExternalAssociationStorage
+class SessionAssociationStorage implements ExternalAssociationStorageInterface
 {
-	use Nette\SmartObject;
-	
 	/** @var \Nette\Http\Session  */
 	private $session;
 
@@ -23,13 +22,13 @@ class SessionAssociationStorage implements IExternalAssociationStorage
 	/** @var string|int|\DateTimeInterface  */
 	private $expiration = '1 hour';
 
-	/** @var \SixtyEightPublishers\ImageBundle\Storage\ExternalAssociation\ReferenceCollection|NULL */
+	/** @var \SixtyEightPublishers\FileBundle\Storage\ExternalAssociation\ReferenceCollection|NULL */
 	private $collection;
 
 	/**
 	 * @param \Nette\Http\Session $session
 	 */
-	public function __construct(Nette\Http\Session $session)
+	public function __construct(Session $session)
 	{
 		$this->session = $session;
 	}
@@ -37,7 +36,7 @@ class SessionAssociationStorage implements IExternalAssociationStorage
 	/**
 	 * @param string|int|\DateTimeInterface $expiration
 	 *
-	 * @return \SixtyEightPublishers\ImageBundle\Storage\ExternalAssociation\SessionAssociationStorage
+	 * @return \SixtyEightPublishers\FileBundle\Storage\ExternalAssociation\SessionAssociationStorage
 	 */
 	public function setExpiration($expiration): self
 	{
@@ -49,7 +48,7 @@ class SessionAssociationStorage implements IExternalAssociationStorage
 	/**
 	 * @return \Nette\Http\SessionSection
 	 */
-	private function getSection(): Nette\Http\SessionSection
+	private function getSection(): SessionSection
 	{
 		if (NULL === $this->sessionSection) {
 			$this->sessionSection = $this->session
@@ -62,15 +61,13 @@ class SessionAssociationStorage implements IExternalAssociationStorage
 		return $this->sessionSection;
 	}
 
-	/********** interface \SixtyEightPublishers\ImageBundle\Storage\ExternalAssociation\IExternalAssociationStorage **********/
-
 	/**
 	 * {@inheritDoc}
 	 */
 	public function setNamespace(string $namespace): void
 	{
 		if (NULL !== $this->sessionSection) {
-			throw new SixtyEightPublishers\ImageBundle\Exception\InvalidStateException('A namespace can￿\'t be changed if a session section was already created.');
+			throw new InvalidStateException('A namespace can￿\'t be changed if a session section was already created.');
 		}
 
 		$this->namespace = $namespace;
@@ -79,7 +76,7 @@ class SessionAssociationStorage implements IExternalAssociationStorage
 	/**
 	 * {@inheritDoc}
 	 */
-	public function getReferences(): IReferenceCollection
+	public function getReferences(): ReferenceCollectionInterface
 	{
 		if (NULL === $this->collection) {
 			$this->collection = new ReferenceCollection($this->getSection()['references'] ?? []);

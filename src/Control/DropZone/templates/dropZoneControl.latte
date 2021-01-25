@@ -1,7 +1,14 @@
+{varType string $settings}
+{varType string $extensions}
+{varType array $contentHtml}
+{varType string $dropzoneId}
+
 <div id="{$dropzoneId}" class="dropzone" data-dropzone data-dropzone-settings="{$settings}" data-dropzone-extensions="{$extensions}">
 	<div n:if="0 < count($contentHtml)" class="dz-message" data-dz-message>
-		{foreach $contentHtml as $html}
-			{$html|noescape}
-		{/foreach}
+		{block #content}
+			{foreach $contentHtml as $html}
+				{$html|noescape}
+			{/foreach}
+		{/block}
 	</div>
 </div>

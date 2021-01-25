@@ -2,47 +2,44 @@
 
 declare(strict_types=1);
 
-namespace SixtyEightPublishers\ImageBundle\Storage;
+namespace SixtyEightPublishers\FileBundle\Storage;
 
-use Nette;
-use Doctrine;
-use SixtyEightPublishers;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\ArrayCollection;
+use SixtyEightPublishers\FileBundle\Entity\FileInterface;
 
-final class ArrayDataStorage implements IDataStorage
+final class ArrayDataStorage implements DataStorageInterface
 {
-	use Nette\SmartObject,
-		TDataStorage;
+	use DataStorageTrait;
 
-	/** @var \SixtyEightPublishers\ImageBundle\DoctrineEntity\IImage[]  */
-	protected $images = [];
+	/** @var \SixtyEightPublishers\FileBundle\Entity\FileInterface[]  */
+	protected $files = [];
 
 	/**
-	 * @param \SixtyEightPublishers\ImageBundle\DoctrineEntity\IImage[] $images
+	 * @param \SixtyEightPublishers\FileBundle\Entity\FileInterface[] $files
 	 */
-	public function __construct(array $images = [])
+	public function __construct(array $files = [])
 	{
-		foreach ($images as $image) {
-			$this->addImage($image);
+		foreach ($files as $file) {
+			$this->addFile($file);
 		}
 	}
 
 	/**
-	 * @param \SixtyEightPublishers\ImageBundle\DoctrineEntity\IImage $image
+	 * @param \SixtyEightPublishers\FileBundle\Entity\FileInterface $file
 	 *
 	 * @return void
 	 */
-	public function addImage(SixtyEightPublishers\ImageBundle\DoctrineEntity\IImage $image): void
+	public function addFile(FileInterface $file): void
 	{
-		$this->images[] = $image;
+		$this->files[] = $file;
 	}
-
-	/*************** interface \SixtyEightPublishers\ImageBundle\Storage\IDataStorage ***************/
 
 	/**
 	 * {@inheritdoc}
 	 */
-	public function getImages(): Doctrine\Common\Collections\Collection
+	public function getFiles(): Collection
 	{
-		return new Doctrine\Common\Collections\ArrayCollection($this->images);
+		return new ArrayCollection($this->files);
 	}
 }

@@ -2,24 +2,22 @@
 
 declare(strict_types=1);
 
-namespace SixtyEightPublishers\ImageBundle\Storage;
+namespace SixtyEightPublishers\FileBundle\Storage;
 
-use SixtyEightPublishers;
+use SixtyEightPublishers\FileBundle\Exception\InvalidArgumentException;
 
-final class DataStorageFactory implements IDataStorageFactory
+final class DataStorageFactory implements DataStorageFactoryInterface
 {
-	/************** interface \SixtyEightPublishers\ImageBundle\Storage\IDataStorageFactory **************/
-
 	/**
 	 * {@inheritdoc}
 	 */
-	public function create(string $storageClassName, ...$args): IDataStorage
+	public function create(string $storageClassName, ...$args): DataStorageInterface
 	{
-		if (!is_subclass_of($storageClassName, IDataStorage::class, TRUE)) {
-			throw new SixtyEightPublishers\ImageBundle\Exception\InvalidArgumentException(sprintf(
+		if (!is_subclass_of($storageClassName, DataStorageInterface::class, TRUE)) {
+			throw new InvalidArgumentException(sprintf(
 				'Class %s is not implementor of interface %s',
 				$storageClassName,
-				IDataStorage::class
+				DataStorageInterface::class
 			));
 		}
 

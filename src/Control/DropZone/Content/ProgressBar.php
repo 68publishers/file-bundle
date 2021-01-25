@@ -2,14 +2,13 @@
 
 declare(strict_types=1);
 
-namespace SixtyEightPublishers\ImageBundle\Control\DropZone\Content;
+namespace SixtyEightPublishers\FileBundle\Control\DropZone\Content;
 
-use Nette;
+use Nette\Utils\Html;
+use Nette\Utils\IHtmlString;
 
-final class ProgressBar implements Nette\Utils\IHtmlString
+final class ProgressBar implements IHtmlString
 {
-	use Nette\SmartObject;
-
 	/** @var array  */
 	private $classes = [
 		'progress-bar',
@@ -18,7 +17,7 @@ final class ProgressBar implements Nette\Utils\IHtmlString
 	/**
 	 * @param array $classes
 	 *
-	 * @return \SixtyEightPublishers\ImageBundle\Control\DropZone\Content\ProgressBar
+	 * @return \SixtyEightPublishers\FileBundle\Control\DropZone\Content\ProgressBar
 	 */
 	public function setClasses(array $classes): self
 	{
@@ -28,7 +27,7 @@ final class ProgressBar implements Nette\Utils\IHtmlString
 	}
 
 	/**
-	 * @return \SixtyEightPublishers\ImageBundle\Control\DropZone\Content\ProgressBar
+	 * @return \SixtyEightPublishers\FileBundle\Control\DropZone\Content\ProgressBar
 	 */
 	public function striped(): self
 	{
@@ -38,7 +37,7 @@ final class ProgressBar implements Nette\Utils\IHtmlString
 	}
 
 	/**
-	 * @return \SixtyEightPublishers\ImageBundle\Control\DropZone\Content\ProgressBar
+	 * @return \SixtyEightPublishers\FileBundle\Control\DropZone\Content\ProgressBar
 	 */
 	public function animated(): self
 	{
@@ -54,8 +53,8 @@ final class ProgressBar implements Nette\Utils\IHtmlString
 	 */
 	public function __toString(): string
 	{
-		$html = Nette\Utils\Html::el('div class="progress my-2"')
-			->addHtml(Nette\Utils\Html::el('div role="progressbar"')->setAttribute('class', $this->classes));
+		$html = Html::el('div class="progress my-2"')
+			->addHtml(Html::el('div role="progressbar"')->setAttribute('class', $this->classes));
 
 		return (string) $html;
 	}

@@ -2,16 +2,18 @@
 
 declare(strict_types=1);
 
-namespace SixtyEightPublishers\ImageBundle\Storage;
+namespace SixtyEightPublishers\FileBundle\Storage;
 
-use Nette;
-use Doctrine;
-use SixtyEightPublishers;
+use Doctrine\ORM\QueryBuilder;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\ORM\Tools\Pagination\Paginator;
+use Doctrine\Common\Collections\ArrayCollection;
+use SixtyEightPublishers\FileBundle\Entity\FileInterface;
+use SixtyEightPublishers\FileBundle\Exception\InvalidStateException;
 
-final class DoctrineDataStorage implements IDataStorage
+final class DoctrineDataStorage implements DataStorageInterface
 {
-	use Nette\SmartObject,
-		TDataStorage;
+	use DataStorageTrait;
 
 	/** @var \Doctrine\ORM\QueryBuilder  */
 	protected $qb;
@@ -19,30 +21,28 @@ final class DoctrineDataStorage implements IDataStorage
 	/**
 	 * @param \Doctrine\ORM\QueryBuilder $qb
 	 */
-	public function __construct(Doctrine\ORM\QueryBuilder $qb)
+	public function __construct(QueryBuilder $qb)
 	{
 		$this->qb = $qb;
 	}
 
-	/*************** interface \SixtyEightPublishers\ImageBundle\Storage\IDataStorage ***************/
-
 	/**
 	 * {@inheritdoc}
 	 */
-	public function getImages(): Doctrine\Common\Collections\Collection
+	public function getFiles(): Collection
 	{
-		$collection = new Doctrine\Common\Collections\ArrayCollection();
+		$collection = new ArrayCollection();
 
-		foreach (new Doctrine\ORM\Tools\Pagination\Paginator($this->qb->getQuery(), FALSE) as $image) {
-			if (!$image instanceof SixtyEightPublishers\ImageBundle\DoctrineEntity\IImage) {
-				throw new SixtyEightPublishers\ImageBundle\Exception\InvalidStateException(sprintf(
+		foreach (new Paginator($this->qb->getQuery(), FALSE) as $file) {
+			if (!$file instanceof FileInterface) {
+				throw new InvalidStateException(sprintf(
 					'Invalid entities returned from passed Query. Entities must be instances of interface %s, %s given.',
-					SixtyEightPublishers\ImageBundle\DoctrineEntity\IImage::class,
-					get_class($image)
+					FileInterface::class,
+					get_class($file)
 				));
 			}
 
-			$collection->add($image);
+			$collection->add($file);
 		}
 
 		return $collection;

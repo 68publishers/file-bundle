@@ -2,9 +2,11 @@
 
 declare(strict_types=1);
 
-namespace SixtyEightPublishers\ImageBundle\Exception;
+namespace SixtyEightPublishers\FileBundle\Exception;
 
-final class TranslatableException extends \Exception implements IException
+use Exception;
+
+final class TranslatableException extends Exception implements ExceptionInterface
 {
 	/** @var array  */
 	private $args;
