@@ -2,116 +2,102 @@
 
 declare(strict_types=1);
 
-namespace SixtyEightPublishers\ImageBundle\Storage\Manipulator\Save;
+namespace SixtyEightPublishers\FileBundle\Storage\Manipulator\Save;
 
-use Nette;
-use Doctrine;
-use SixtyEightPublishers;
+use Nette\Http\FileUpload;
+use Doctrine\ORM\EntityManagerInterface;
+use SixtyEightPublishers\FileStorage\FileInfoInterface;
+use SixtyEightPublishers\FileBundle\Entity\FileInterface;
+use SixtyEightPublishers\FileBundle\Event\ResourceCreatedEvent;
+use SixtyEightPublishers\FileBundle\ResourceMetadata\MetadataName;
+use SixtyEightPublishers\FileBundle\Storage\Options\OptionsInterface;
+use SixtyEightPublishers\DoctrinePersistence\TransactionFactoryInterface;
+use SixtyEightPublishers\FileBundle\Storage\ExternalAssociation\Reference;
+use SixtyEightPublishers\FileBundle\Storage\Manipulator\AbstractManipulator;
+use SixtyEightPublishers\FileBundle\EntityFactory\FileEntityFactoryInterface;
+use SixtyEightPublishers\FileBundle\FileStorageResolver\FileStorageResolverInterface;
+use SixtyEightPublishers\FileBundle\ResourceMetadata\ResourceMetadataFactoryInterface;
+use SixtyEightPublishers\FileBundle\Storage\Manipulator\ExternalAssociationStorageAwareTrait;
+use SixtyEightPublishers\FileBundle\Storage\Manipulator\ExternalAssociationStorageAwareInterface;
 
-class SaveManipulator extends SixtyEightPublishers\ImageBundle\Storage\Manipulator\AbstractManipulator implements ISaveManipulator, SixtyEightPublishers\ImageBundle\Storage\Manipulator\IExternalAssociationStorageAware
+class SaveManipulator extends AbstractManipulator implements SaveManipulatorInterface, ExternalAssociationStorageAwareInterface
 {
-	use SixtyEightPublishers\ImageBundle\Storage\Manipulator\TExtendableTransaction,
-		SixtyEightPublishers\ImageBundle\Storage\Manipulator\TExternalAssociationStorageAware;
+	use ExternalAssociationStorageAwareTrait;
 
-	/** @var \SixtyEightPublishers\ImageBundle\EntityFactory\IImageEntityFactory  */
-	private $imageEntityFactory;
+	/** @var \SixtyEightPublishers\FileBundle\FileStorageResolver\FileStorageResolverInterface  */
+	private $fileStorageResolver;
 
-	/** @var \SixtyEightPublishers\ImageBundle\ResourceMetadata\IResourceMetadataFactory  */
+	/** @var \SixtyEightPublishers\FileBundle\EntityFactory\FileEntityFactoryInterface  */
+	private $fileEntityFactory;
+
+	/** @var \SixtyEightPublishers\FileBundle\ResourceMetadata\ResourceMetadataFactoryInterface  */
 	private $resourceMetadataFactory;
 
-	/** @var \SixtyEightPublishers\ImageStorage\IImageStorageProvider  */
-	private $imageStorageProvider;
-
-	/** @var \SixtyEightPublishers\DoctrinePersistence\Transaction\ITransactionFactory  */
+	/** @var \SixtyEightPublishers\DoctrinePersistence\TransactionFactoryInterface  */
 	private $transactionFactory;
 
-	/** @var string|NULL  */
-	private $imageStorageName;
-
 	/**
-	 * @param \SixtyEightPublishers\ImageBundle\EntityFactory\IImageEntityFactory         $imageEntityFactory
-	 * @param \SixtyEightPublishers\ImageBundle\ResourceMetadata\IResourceMetadataFactory $resourceMetadataFactory
-	 * @param \SixtyEightPublishers\ImageStorage\IImageStorageProvider                    $imageStorageProvider
-	 * @param \SixtyEightPublishers\DoctrinePersistence\Transaction\ITransactionFactory   $transactionFactory
-	 * @param string|NULL                                                                 $imageStorageName
+	 * @param \SixtyEightPublishers\FileBundle\FileStorageResolver\FileStorageResolverInterface  $fileStorageResolver
+	 * @param \SixtyEightPublishers\FileBundle\EntityFactory\FileEntityFactoryInterface          $fileEntityFactory
+	 * @param \SixtyEightPublishers\FileBundle\ResourceMetadata\ResourceMetadataFactoryInterface $resourceMetadataFactory
+	 * @param \SixtyEightPublishers\DoctrinePersistence\TransactionFactoryInterface              $transactionFactory
 	 */
-	public function __construct(
-		SixtyEightPublishers\ImageBundle\EntityFactory\IImageEntityFactory $imageEntityFactory,
-		SixtyEightPublishers\ImageBundle\ResourceMetadata\IResourceMetadataFactory $resourceMetadataFactory,
-		SixtyEightPublishers\ImageStorage\IImageStorageProvider $imageStorageProvider,
-		SixtyEightPublishers\DoctrinePersistence\Transaction\ITransactionFactory $transactionFactory,
-		?string $imageStorageName = NULL
-	) {
-		$this->imageEntityFactory = $imageEntityFactory;
+	public function __construct(FileStorageResolverInterface $fileStorageResolver, FileEntityFactoryInterface $fileEntityFactory, ResourceMetadataFactoryInterface $resourceMetadataFactory, TransactionFactoryInterface $transactionFactory)
+	{
+		$this->fileStorageResolver = $fileStorageResolver;
+		$this->fileEntityFactory = $fileEntityFactory;
 		$this->resourceMetadataFactory = $resourceMetadataFactory;
-		$this->imageStorageProvider = $imageStorageProvider;
 		$this->transactionFactory = $transactionFactory;
-		$this->imageStorageName = $imageStorageName;
 	}
-
-	/********** interface \SixtyEightPublishers\ImageBundle\Storage\Manipulator\IDeleteManipulator **********/
 
 	/**
 	 * {@inheritdoc}
 	 *
 	 * @throws \Exception
 	 */
-	public function createResource(Nette\Http\FileUpload $fileUpload, SixtyEightPublishers\ImageBundle\Storage\Options\IOptions $options): SixtyEightPublishers\ImageStorage\Resource\IResource
+	public function __invoke(OptionsInterface $options, FileUpload $fileUpload): FileInterface
 	{
 		$helper = new Options($options);
-		$storage = $this->imageStorageProvider->get($this->imageStorageName);
-		$path = sprintf('%s/%s', $helper->getNamespace(), $helper->getSourceName($fileUpload));
+		$storage = $this->fileStorageResolver->resolve($fileUpload);
 
 		$resource = $storage->createResourceFromLocalFile(
-			new SixtyEightPublishers\ImageStorage\ImageInfo($path),
+			$storage->createPathInfo(sprintf('%s/%s', $helper->getNamespace(), $helper->getSourceName($fileUpload))),
 			$fileUpload->getTemporaryFile()
 		);
 
-		$resource->modifyImage([
-			'o' => 'auto',
-		]);
+		$this->getEventDispatcher()->dispatch(new ResourceCreatedEvent($resource), ResourceCreatedEvent::NAME);
 
-		return  $resource;
-	}
-
-	/**
-	 * {@inheritdoc}
-	 *
-	 * @throws \SixtyEightPublishers\ImageStorage\Exception\FilesystemException
-	 */
-	public function __invoke(SixtyEightPublishers\ImageBundle\Storage\Options\IOptions $options, SixtyEightPublishers\ImageStorage\Resource\IResource $resource): SixtyEightPublishers\ImageBundle\DoctrineEntity\IImage
-	{
-		$helper = new Options($options);
-		$storage = $this->imageStorageProvider->get($this->imageStorageName);
 		$resourceMetadata = array_merge($this->resourceMetadataFactory->create($resource), $helper->getCustomMetadata());
+
+		if (!isset($resourceMetadata[MetadataName::NAME])) {
+			$resourceMetadata[MetadataName::NAME] = $fileUpload->getUntrustedName();
+		}
 
 		$storage->save($resource);
 
-		$transaction = $this->transactionFactory->create(function (Doctrine\ORM\EntityManagerInterface $em, SixtyEightPublishers\ImageStorage\ImageInfo $imageInfo) use ($resourceMetadata) {
-			$image = $this->imageEntityFactory->create(
-				SixtyEightPublishers\ImageStorage\DoctrineType\ImageInfo\ImageInfoFactory::create($imageInfo, $this->imageStorageName)
-			);
+		$transaction = $this->transactionFactory->create(function (EntityManagerInterface $em, FileInfoInterface $fileInfo) use ($resourceMetadata): FileInterface {
+			$file = $this->fileEntityFactory->create($fileInfo);
 
-			$image->setMetadata($resourceMetadata);
-			$em->persist($image);
+			$file->setMetadata($resourceMetadata);
+			$em->persist($file);
 
-			return $image;
-		});
+			return $file;
+		}, [
+			'fileInfo' => $storage->createFileInfo($resource->getPathInfo()),
+			'options' => $options,
+		]);
 
 		# External associations
 		$associationStorage = $this->getExternalAssociationStorage();
 
 		if (NULL !== $associationStorage) {
-			$transaction->finally(static function (SixtyEightPublishers\ImageBundle\DoctrineEntity\IImage $image) use ($associationStorage) {
-				$associationStorage->getReferences()->add(new SixtyEightPublishers\ImageBundle\Storage\ExternalAssociation\Reference((string) $image->getId()));
+			$transaction->finally(static function (FileInterface $file) use ($associationStorage) {
+				$associationStorage->getReferences()->add(new Reference((string) $file->getId()));
 				$associationStorage->flush();
 			});
 		}
 
-		$transaction = $transaction->immutable($resource->getInfo(), $options);
-
-		$this->extendTransaction($transaction);
-		$helper->extendTransaction($transaction);
+		$this->dispatchExtendTransactionEvent($transaction, $options);
 
 		return $transaction->run();
 	}

@@ -2,18 +2,19 @@
 
 declare(strict_types=1);
 
-namespace SixtyEightPublishers\ImageBundle\ResourceMetadata;
-
-use Nette;
+namespace SixtyEightPublishers\FileBundle\ResourceMetadata;
 
 /**
  * Enum with names of basic metadata.
  */
-final class MetadataName
+class MetadataName
 {
-	use Nette\StaticClass;
+	public const MIME = 'mime';
+	public const NAME = 'name';
+	public const DESCRIPTION = 'description';
+	public const FILE_SIZE = 'file_size';
 
-	public const    WIDTH = 'width',
-					HEIGHT = 'height',
-					MIME = 'mime';
+	private function __construct()
+	{
+	}
 }

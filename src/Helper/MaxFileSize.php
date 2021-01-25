@@ -2,14 +2,16 @@
 
 declare(strict_types=1);
 
-namespace SixtyEightPublishers\ImageBundle\Helper;
+namespace SixtyEightPublishers\FileBundle\Helper;
 
-use Nette;
-use SixtyEightPublishers;
+use Nette\Utils\Strings;
+use SixtyEightPublishers\FileBundle\Exception\InvalidArgumentException;
 
 final class MaxFileSize
 {
-	use Nette\StaticClass;
+	public function __construct()
+	{
+	}
 
 	/**
 	 * @return int
@@ -23,7 +25,7 @@ final class MaxFileSize
 	 * @param int|float|string $value
 	 *
 	 * @return int
-	 * @throws \SixtyEightPublishers\ImageBundle\Exception\InvalidArgumentException
+	 * @throws \SixtyEightPublishers\FileBundle\Exception\InvalidArgumentException
 	 */
 	public static function parseBytes($value): int
 	{
@@ -31,15 +33,17 @@ final class MaxFileSize
 			return (int) $value;
 		}
 
-		$value = Nette\Utils\Strings::trim($value);
-		$numValue = Nette\Utils\Strings::substring($value, 0, Nette\Utils\Strings::length($value) - 1);
+		$value = Strings::trim($value);
+		$numValue = Strings::substring($value, 0, Strings::length($value) - 1);
 
-		switch (Nette\Utils\Strings::lower(Nette\Utils\Strings::substring($value, Nette\Utils\Strings::length($value) - 1))) {
+		switch (Strings::lower(Strings::substring($value, Strings::length($value) - 1))) {
 			case 'g':
 				$parsed = $numValue * (1024 * 1024 * 1024); //1073741824
+
 				break;
 			case 'm':
 				$parsed = $numValue * (1024 * 1024); //1048576
+
 				break;
 			case 'k':
 				$parsed = $numValue * 1024;
@@ -50,7 +54,7 @@ final class MaxFileSize
 			return (int) floor($parsed);
 		}
 
-		throw new SixtyEightPublishers\ImageBundle\Exception\InvalidArgumentException(sprintf(
+		throw new InvalidArgumentException(sprintf(
 			'Argument 1 passed to %s is not valid.',
 			__METHOD__
 		));

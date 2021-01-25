@@ -2,40 +2,40 @@
 
 declare(strict_types=1);
 
-namespace SixtyEightPublishers\ImageBundle\Storage;
+namespace SixtyEightPublishers\FileBundle\Storage;
 
-use Nette;
-use Doctrine;
-use SixtyEightPublishers;
+use Doctrine\ORM\EntityManagerInterface;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\ArrayCollection;
+use SixtyEightPublishers\FileBundle\Entity\FileInterface;
+use SixtyEightPublishers\FileBundle\Storage\ExternalAssociation\Reference;
+use SixtyEightPublishers\FileBundle\Storage\Manipulator\ManipulatorInterface;
+use SixtyEightPublishers\FileBundle\Storage\Manipulator\ExternalAssociationStorageAwareInterface;
+use SixtyEightPublishers\FileBundle\Storage\ExternalAssociation\ExternalAssociationStorageInterface;
 
-final class ExternalAssociationDataStorage implements IDataStorage
+final class ExternalAssociationDataStorage implements DataStorageInterface
 {
-	use Nette\SmartObject;
-	use TDataStorage {
+	use DataStorageTrait {
 		addManipulator as private _addManipulator;
 	}
 
 	/** @var \Doctrine\ORM\EntityManagerInterface  */
 	private $em;
 
-	/** @var \SixtyEightPublishers\ImageBundle\Storage\ExternalAssociation\IExternalAssociationStorage  */
+	/** @var \SixtyEightPublishers\FileBundle\Storage\ExternalAssociation\ExternalAssociationStorageInterface  */
 	private $externalAssociationStorage;
 
 	/** @var string  */
 	private $entityClassName;
 
 	/**
-	 * @param \Doctrine\ORM\EntityManagerInterface                                                      $em
-	 * @param \SixtyEightPublishers\ImageBundle\Storage\ExternalAssociation\IExternalAssociationStorage $externalAssociationStorage
-	 * @param string|NULL                                                                               $namespace
-	 * @param string                                                                                    $entityClassName
+	 * @param \Doctrine\ORM\EntityManagerInterface                                                             $em
+	 * @param \SixtyEightPublishers\FileBundle\Storage\ExternalAssociation\ExternalAssociationStorageInterface $externalAssociationStorage
+	 * @param string|NULL                                                                                      $namespace
+	 * @param string                                                                                           $entityClassName
 	 */
-	public function __construct(
-		Doctrine\ORM\EntityManagerInterface $em,
-		ExternalAssociation\IExternalAssociationStorage $externalAssociationStorage,
-		?string $namespace = NULL,
-		string $entityClassName = SixtyEightPublishers\ImageBundle\DoctrineEntity\IImage::class
-	) {
+	public function __construct(EntityManagerInterface $em, ExternalAssociationStorageInterface $externalAssociationStorage, ?string $namespace = NULL, string $entityClassName = FileInterface::class)
+	{
 		$this->em = $em;
 		$this->externalAssociationStorage = $externalAssociationStorage;
 		$this->entityClassName = $entityClassName;
@@ -46,21 +46,19 @@ final class ExternalAssociationDataStorage implements IDataStorage
 	}
 
 	/**
-	 * @return \SixtyEightPublishers\ImageBundle\Storage\ExternalAssociation\IExternalAssociationStorage
+	 * @return \SixtyEightPublishers\FileBundle\Storage\ExternalAssociation\ExternalAssociationStorageInterface
 	 */
-	public function getExternalAssociationStorage(): ExternalAssociation\IExternalAssociationStorage
+	public function getExternalAssociationStorage(): ExternalAssociationStorageInterface
 	{
 		return $this->externalAssociationStorage;
 	}
 
-	/*************** interface \SixtyEightPublishers\ImageBundle\Storage\IDataStorage ***************/
-
 	/**
 	 * {@inheritdoc}
 	 */
-	public function addManipulator(Manipulator\IManipulator $manipulator): void
+	public function addManipulator(ManipulatorInterface $manipulator): void
 	{
-		if ($manipulator instanceof Manipulator\IExternalAssociationStorageAware) {
+		if ($manipulator instanceof ExternalAssociationStorageAwareInterface) {
 			$manipulator->setExternalAssociationStorage($this->externalAssociationStorage);
 		}
 
@@ -72,29 +70,29 @@ final class ExternalAssociationDataStorage implements IDataStorage
 	 *
 	 * @throws \Doctrine\ORM\Mapping\MappingException
 	 */
-	public function getImages(): Doctrine\Common\Collections\Collection
+	public function getFiles(): Collection
 	{
 		$qb = $this->em->createQueryBuilder();
 		$cm = $this->em->getClassMetadata($this->entityClassName);
 
-		$ids = $this->externalAssociationStorage->getReferences()->map(static function (SixtyEightPublishers\ImageBundle\Storage\ExternalAssociation\Reference $reference) {
+		$ids = $this->externalAssociationStorage->getReferences()->map(static function (Reference $reference) {
 			return $reference->getId();
 		});
 
 		if (0 >= count($ids)) {
-			return new Doctrine\Common\Collections\ArrayCollection();
+			return new ArrayCollection();
 		}
 
 		$qb->select('i')
 			->from($this->entityClassName, 'i')
 			->where($qb->expr()->in('i.' . $cm->getSingleIdentifierFieldName(), $ids));
 
-		$images = (new DoctrineDataStorage($qb))->getImages()->toArray();
+		$files = (new DoctrineDataStorage($qb))->getFiles()->toArray();
 
-		usort($images, static function (SixtyEightPublishers\ImageBundle\DoctrineEntity\IImage $first, SixtyEightPublishers\ImageBundle\DoctrineEntity\IImage $second) use ($ids) {
+		usort($files, static function (FileInterface $first, FileInterface $second) use ($ids) {
 			return array_search((string) $first->getId(), $ids, TRUE) - array_search((string) $second->getId(), $ids, TRUE);
 		});
 
-		return new Doctrine\Common\Collections\ArrayCollection($images);
+		return new ArrayCollection($files);
 	}
 }

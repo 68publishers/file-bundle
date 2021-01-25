@@ -2,32 +2,29 @@
 
 declare(strict_types=1);
 
-namespace SixtyEightPublishers\ImageBundle\Event;
+namespace SixtyEightPublishers\FileBundle\Event;
 
-use Nette;
-use Symfony;
-use SixtyEightPublishers;
+use Symfony\Contracts\EventDispatcher\Event;
+use SixtyEightPublishers\FileBundle\Entity\FileInterface;
 
-final class ActionSuccessEvent extends Symfony\Contracts\EventDispatcher\Event
+final class ActionSuccessEvent extends Event
 {
-	use Nette\SmartObject;
-
-	public const NAME = 'image_bundle.action_success';
+	public const NAME = 'file_bundle.action_success';
 
 	/** @var string  */
 	private $actionName;
 
-	/** @var \SixtyEightPublishers\ImageBundle\DoctrineEntity\IImage  */
-	private $image;
+	/** @var \SixtyEightPublishers\FileBundle\Entity\FileInterface  */
+	private $file;
 
 	/**
-	 * @param string                                                  $actionName
-	 * @param \SixtyEightPublishers\ImageBundle\DoctrineEntity\IImage $image
+	 * @param string                                                $actionName
+	 * @param \SixtyEightPublishers\FileBundle\Entity\FileInterface $file
 	 */
-	public function __construct(string $actionName, SixtyEightPublishers\ImageBundle\DoctrineEntity\IImage $image)
+	public function __construct(string $actionName, FileInterface $file)
 	{
 		$this->actionName = $actionName;
-		$this->image = $image;
+		$this->file = $file;
 	}
 
 	/**
@@ -39,10 +36,10 @@ final class ActionSuccessEvent extends Symfony\Contracts\EventDispatcher\Event
 	}
 
 	/**
-	 * @return \SixtyEightPublishers\ImageBundle\DoctrineEntity\IImage
+	 * @return \SixtyEightPublishers\FileBundle\Entity\FileInterface
 	 */
-	public function getImage(): SixtyEightPublishers\ImageBundle\DoctrineEntity\IImage
+	public function getFile(): FileInterface
 	{
-		return $this->image;
+		return $this->file;
 	}
 }

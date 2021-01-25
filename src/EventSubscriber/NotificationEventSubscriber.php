@@ -2,16 +2,27 @@
 
 declare(strict_types=1);
 
-namespace SixtyEightPublishers\ImageBundle\EventSubscriber;
+namespace SixtyEightPublishers\FileBundle\EventSubscriber;
 
-use Nette;
-use Symfony;
-use SixtyEightPublishers;
+use Nette\Application\IPresenter;
+use Nette\Application\Application;
+use Nette\Application\UI\Presenter;
+use SixtyEightPublishers\NotificationBundle\Notifier;
+use SixtyEightPublishers\FileBundle\Event\ActionErrorEvent;
+use SixtyEightPublishers\FileBundle\Event\UploadErrorEvent;
+use SixtyEightPublishers\FileBundle\Event\ActionSuccessEvent;
+use SixtyEightPublishers\NotificationBundle\INotifierFactory;
+use SixtyEightPublishers\FileBundle\Event\UploadCompletedEvent;
+use Symfony\Component\EventDispatcher\EventSubscriberInterface;
+use SixtyEightPublishers\FileBundle\Exception\ExceptionInterface;
+use SixtyEightPublishers\FileBundle\Exception\InvalidStateException;
+use SixtyEightPublishers\FileBundle\Exception\TranslatableException;
+use SixtyEightPublishers\NotificationBundle\Notification\Notification;
+use SixtyEightPublishers\FileBundle\Control\FileManager\FileManagerControl;
+use SixtyEightPublishers\NotificationBundle\Notification\NotificationBuilder;
 
-final class NotificationEventSubscriber implements Symfony\Component\EventDispatcher\EventSubscriberInterface
+final class NotificationEventSubscriber implements EventSubscriberInterface
 {
-	use Nette\SmartObject;
-
 	/** @var \SixtyEightPublishers\NotificationBundle\INotifierFactory  */
 	private $notifierFactory;
 
@@ -19,11 +30,11 @@ final class NotificationEventSubscriber implements Symfony\Component\EventDispat
 	private $presenter;
 
 	/** @var string  */
-	private $notificationEndpoint = SixtyEightPublishers\NotificationBundle\Notification\Notification::ENDPOINT_FLASH_MESSAGE;
+	private $notificationEndpoint = Notification::ENDPOINT_TOASTR;
 
 	/** @var string|NULL */
 	private $prefix;
-	
+
 	/** @var \SixtyEightPublishers\NotificationBundle\Notifier|NULL */
 	private $notifier;
 
@@ -37,26 +48,37 @@ final class NotificationEventSubscriber implements Symfony\Component\EventDispat
 	 * @param \SixtyEightPublishers\NotificationBundle\INotifierFactory $notifierFactory
 	 * @param \Nette\Application\Application                            $application
 	 */
-	public function __construct(
-		SixtyEightPublishers\NotificationBundle\INotifierFactory $notifierFactory,
-		Nette\Application\Application $application
-	) {
+	public function __construct(INotifierFactory $notifierFactory, Application $application)
+	{
 		$this->notifierFactory = $notifierFactory;
 		$this->presenter = $application->getPresenter();
 
-		$application->onPresenter[] = function ($_, Nette\Application\IPresenter $presenter) {
+		$application->onPresenter[] = function ($_, IPresenter $presenter) {
 			$this->presenter = $presenter;
 		};
 	}
 
 	/**
-	 * @internal
-	 *
-	 * @param \SixtyEightPublishers\ImageBundle\Event\UploadCompletedEvent $event
+	 * {@inheritdoc}
+	 */
+	public static function getSubscribedEvents(): array
+	{
+		return [
+			UploadCompletedEvent::NAME => 'onUploadCompleted',
+			UploadErrorEvent::NAME => 'onUploadError',
+			ActionSuccessEvent::NAME => 'onActionSuccess',
+			ActionErrorEvent::NAME => 'onActionError',
+		];
+	}
+
+	/**
+	 * @param \SixtyEightPublishers\FileBundle\Event\UploadCompletedEvent $event
 	 *
 	 * @return void
+	 *@internal
+	 *
 	 */
-	public function onUploadCompleted(SixtyEightPublishers\ImageBundle\Event\UploadCompletedEvent $event): void
+	public function onUploadCompleted(UploadCompletedEvent $event): void
 	{
 		if (!$this->isUiPresenter()) {
 			return;
@@ -70,13 +92,13 @@ final class NotificationEventSubscriber implements Symfony\Component\EventDispat
 	}
 
 	/**
-	 * @internal
-	 *
-	 * @param \SixtyEightPublishers\ImageBundle\Event\UploadErrorEvent $event
+	 * @param \SixtyEightPublishers\FileBundle\Event\UploadErrorEvent $event
 	 *
 	 * @return void
+	 *@internal
+	 *
 	 */
-	public function onUploadError(SixtyEightPublishers\ImageBundle\Event\UploadErrorEvent $event): void
+	public function onUploadError(UploadErrorEvent $event): void
 	{
 		if (!$this->isUiPresenter()) {
 			return;
@@ -89,13 +111,13 @@ final class NotificationEventSubscriber implements Symfony\Component\EventDispat
 	}
 
 	/**
-	 * @internal
-	 *
-	 * @param \SixtyEightPublishers\ImageBundle\Event\ActionSuccessEvent $event
+	 * @param \SixtyEightPublishers\FileBundle\Event\ActionSuccessEvent $event
 	 *
 	 * @return void
+	 *@internal
+	 *
 	 */
-	public function onActionSuccess(SixtyEightPublishers\ImageBundle\Event\ActionSuccessEvent $event): void
+	public function onActionSuccess(ActionSuccessEvent $event): void
 	{
 		if (!$this->isUiPresenter()) {
 			return;
@@ -113,13 +135,13 @@ final class NotificationEventSubscriber implements Symfony\Component\EventDispat
 	}
 
 	/**
-	 * @internal
-	 *
-	 * @param \SixtyEightPublishers\ImageBundle\Event\ActionErrorEvent $event
+	 * @param \SixtyEightPublishers\FileBundle\Event\ActionErrorEvent $event
 	 *
 	 * @return void
+	 *@internal
+	 *
 	 */
-	public function onActionError(SixtyEightPublishers\ImageBundle\Event\ActionErrorEvent $event): void
+	public function onActionError(ActionErrorEvent $event): void
 	{
 		if (!$this->isUiPresenter()) {
 			return;
@@ -138,20 +160,20 @@ final class NotificationEventSubscriber implements Symfony\Component\EventDispat
 	/**
 	 * @param string $prefix
 	 *
-	 * @return \SixtyEightPublishers\ImageBundle\EventSubscriber\NotificationEventSubscriber
+	 * @return \SixtyEightPublishers\FileBundle\EventSubscriber\NotificationEventSubscriber
 	 */
 	public function setPrefix(string $prefix): self
 	{
 		$this->prefix = $prefix;
 		$this->notifier = NULL;
-		
+
 		return $this;
 	}
 
 	/**
 	 * @param string $notificationEndpoint
 	 *
-	 * @return \SixtyEightPublishers\ImageBundle\EventSubscriber\NotificationEventSubscriber
+	 * @return \SixtyEightPublishers\FileBundle\EventSubscriber\NotificationEventSubscriber
 	 */
 	public function setNotificationEndpoint(string $notificationEndpoint): self
 	{
@@ -164,7 +186,7 @@ final class NotificationEventSubscriber implements Symfony\Component\EventDispat
 	 * @param array $success
 	 * @param array $error
 	 *
-	 * @return \SixtyEightPublishers\ImageBundle\EventSubscriber\NotificationEventSubscriber
+	 * @return \SixtyEightPublishers\FileBundle\EventSubscriber\NotificationEventSubscriber
 	 */
 	public function disableActions(array $success, array $error = []): self
 	{
@@ -179,25 +201,25 @@ final class NotificationEventSubscriber implements Symfony\Component\EventDispat
 	/**
 	 * @return \SixtyEightPublishers\NotificationBundle\Notifier
 	 */
-	private function getNotifier(): SixtyEightPublishers\NotificationBundle\Notifier
+	private function getNotifier(): Notifier
 	{
 		if (NULL !== $this->notifier) {
 			return $this->notifier;
 		}
-		
+
 		return $this->notifier = $this->notifierFactory->create(
-			$this->prefix ?? (str_replace('\\', '_', SixtyEightPublishers\ImageBundle\Control\ImageManager\ImageManagerControl::class) . '.message')
+			$this->prefix ?? (str_replace('\\', '_', FileManagerControl::class) . '.message')
 		);
 	}
 
 	/**
 	 * @return void
-	 * @throws \SixtyEightPublishers\ImageBundle\Exception\InvalidStateException
+	 * @throws \SixtyEightPublishers\FileBundle\Exception\InvalidStateException
 	 */
 	private function redrawMessages(): void
 	{
 		if (NULL === $this->presenter) {
-			throw new SixtyEightPublishers\ImageBundle\Exception\InvalidStateException('Current Presenter is not set.');
+			throw new InvalidStateException('Current Presenter is not set.');
 		}
 
 		if (!$this->isUiPresenter() || !$this->presenter->isAjax()) {
@@ -221,20 +243,20 @@ final class NotificationEventSubscriber implements Symfony\Component\EventDispat
 	 */
 	private function isUiPresenter(): bool
 	{
-		return $this->presenter instanceof Nette\Application\UI\Presenter;
+		return $this->presenter instanceof Presenter;
 	}
 
 	/**
-	 * @param string                                                 $messageBase
-	 * @param \SixtyEightPublishers\ImageBundle\Exception\IException $e
+	 * @param string                                                        $messageBase
+	 * @param \SixtyEightPublishers\FileBundle\Exception\ExceptionInterface $e
 	 *
 	 * @return \SixtyEightPublishers\NotificationBundle\Notification\NotificationBuilder
 	 */
-	private function createErrorNotificationBuilder(string $messageBase, SixtyEightPublishers\ImageBundle\Exception\IException $e): SixtyEightPublishers\NotificationBundle\Notification\NotificationBuilder
+	private function createErrorNotificationBuilder(string $messageBase, ExceptionInterface $e): NotificationBuilder
 	{
 		$notifier = $this->getNotifier();
 
-		if ($e instanceof SixtyEightPublishers\ImageBundle\Exception\TranslatableException) {
+		if ($e instanceof TranslatableException) {
 			return $notifier->error($messageBase . '.' . $e->getMessage(), $e->getArgs());
 		}
 
@@ -242,20 +264,5 @@ final class NotificationEventSubscriber implements Symfony\Component\EventDispat
 			'code' => $e->getCode(),
 			'message' => $e->getMessage(),
 		]);
-	}
-	
-	/***************** interface \Symfony\Component\EventDispatcher\EventSubscriberInterface *****************/
-
-	/**
-	 * {@inheritdoc}
-	 */
-	public static function getSubscribedEvents(): array
-	{
-		return [
-			SixtyEightPublishers\ImageBundle\Event\UploadCompletedEvent::NAME => 'onUploadCompleted',
-			SixtyEightPublishers\ImageBundle\Event\UploadErrorEvent::NAME => 'onUploadError',
-			SixtyEightPublishers\ImageBundle\Event\ActionSuccessEvent::NAME => 'onActionSuccess',
-			SixtyEightPublishers\ImageBundle\Event\ActionErrorEvent::NAME => 'onActionError',
-		];
 	}
 }

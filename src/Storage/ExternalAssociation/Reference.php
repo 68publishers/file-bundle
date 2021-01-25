@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace SixtyEightPublishers\ImageBundle\Storage\ExternalAssociation;
+namespace SixtyEightPublishers\FileBundle\Storage\ExternalAssociation;
 
 class Reference
 {

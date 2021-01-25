@@ -2,18 +2,19 @@
 
 declare(strict_types=1);
 
-namespace SixtyEightPublishers\ImageBundle\Exception;
+namespace SixtyEightPublishers\FileBundle\Exception;
 
 use Nette;
+use Exception;
 
-final class UploadException extends \Exception implements IException
+final class UploadException extends Exception implements ExceptionInterface
 {
 	public const    INVALID_FILE = 1,
 					UNSUPPORTED_TYPE = 2,
 					MAX_FILES_REACHED = 3;
 
 	/**
-	 * @return \SixtyEightPublishers\ImageBundle\Exception\UploadException
+	 * @return \SixtyEightPublishers\FileBundle\Exception\UploadException
 	 */
 	public static function invalidFileUpload(): self
 	{
@@ -26,7 +27,7 @@ final class UploadException extends \Exception implements IException
 	/**
 	 * @param string $type
 	 *
-	 * @return \SixtyEightPublishers\ImageBundle\Exception\UploadException
+	 * @return \SixtyEightPublishers\FileBundle\Exception\UploadException
 	 */
 	public static function unsupportedType(string $type): self
 	{
@@ -39,7 +40,7 @@ final class UploadException extends \Exception implements IException
 	/**
 	 * @param int $max
 	 *
-	 * @return \SixtyEightPublishers\ImageBundle\Exception\UploadException
+	 * @return \SixtyEightPublishers\FileBundle\Exception\UploadException
 	 */
 	public static function maximumFilesReached(int $max): self
 	{

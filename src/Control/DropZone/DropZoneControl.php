@@ -2,18 +2,30 @@
 
 declare(strict_types=1);
 
-namespace SixtyEightPublishers\ImageBundle\Control\DropZone;
+namespace SixtyEightPublishers\FileBundle\Control\DropZone;
 
-use Nette;
-use Symfony;
-use SixtyEightPublishers;
+use Nette\Utils\Json;
+use Nette\Http\IRequest;
+use Nette\Utils\Strings;
+use Nette\Http\IResponse;
+use Nette\Http\FileUpload;
+use Nette\Utils\IHtmlString;
+use SixtyEightPublishers\SmartNetteComponent\UI\Control;
+use SixtyEightPublishers\FileBundle\Event\FileUploadEvent;
+use SixtyEightPublishers\FileBundle\Event\UploadErrorEvent;
+use SixtyEightPublishers\FileBundle\Exception\UploadException;
+use SixtyEightPublishers\FileBundle\Event\UploadCompletedEvent;
+use SixtyEightPublishers\TranslationBridge\TranslatorAwareTrait;
+use SixtyEightPublishers\FileBundle\Exception\ExceptionInterface;
+use SixtyEightPublishers\TranslationBridge\TranslatorAwareInterface;
+use SixtyEightPublishers\FileBundle\Exception\InvalidArgumentException;
+use SixtyEightPublishers\EventDispatcherExtra\EventDispatcherAwareTrait;
+use SixtyEightPublishers\EventDispatcherExtra\EventDispatcherAwareInterface;
 
-final class DropZoneControl extends SixtyEightPublishers\SmartNetteComponent\UI\Control implements SixtyEightPublishers\SmartNetteComponent\Translator\ITranslatorAware
+final class DropZoneControl extends Control implements TranslatorAwareInterface, EventDispatcherAwareInterface
 {
-	use SixtyEightPublishers\SmartNetteComponent\Translator\TTranslatorAware;
-
-	/** @var \Symfony\Component\EventDispatcher\EventDispatcherInterface|\Symfony\Component\EventDispatcher\EventDispatcher  */
-	private $eventDispatcher;
+	use TranslatorAwareTrait;
+	use EventDispatcherAwareTrait;
 
 	/** @var \Nette\Http\IRequest  */
 	private $request;
@@ -40,18 +52,11 @@ final class DropZoneControl extends SixtyEightPublishers\SmartNetteComponent\UI\
 	private $extensions = [];
 
 	/**
-	 * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $eventDispatcher
-	 * @param \Nette\Http\IRequest                                        $request
-	 * @param \Nette\Http\IResponse                                       $response
+	 * @param \Nette\Http\IRequest  $request
+	 * @param \Nette\Http\IResponse $response
 	 */
-	public function __construct(
-		Symfony\Component\EventDispatcher\EventDispatcherInterface $eventDispatcher,
-		Nette\Http\IRequest $request,
-		Nette\Http\IResponse $response
-	) {
-		parent::__construct();
-
-		$this->eventDispatcher = $eventDispatcher;
+	public function __construct(IRequest $request, IResponse $response)
+	{
 		$this->request = $request;
 		$this->response = $response;
 	}
@@ -66,25 +71,18 @@ final class DropZoneControl extends SixtyEightPublishers\SmartNetteComponent\UI\
 		try {
 			$file = $this->request->getFile('file');
 
-			if (!$file instanceof Nette\Http\FileUpload || !$file->isOk()) {
-				throw SixtyEightPublishers\ImageBundle\Exception\UploadException::invalidFileUpload();
+			if (!$file instanceof FileUpload || !$file->isOk()) {
+				throw UploadException::invalidFileUpload();
 			}
 
 			if (!$this->isUploadAcceptable($file)) {
-				throw SixtyEightPublishers\ImageBundle\Exception\UploadException::unsupportedType($file->getContentType());
+				throw UploadException::unsupportedType($file->getContentType());
 			}
 
-			$this->eventDispatcher->dispatch(
-				new SixtyEightPublishers\ImageBundle\Event\FileUploadEvent($file),
-				SixtyEightPublishers\ImageBundle\Event\FileUploadEvent::NAME
-			);
-		} catch (SixtyEightPublishers\ImageBundle\Exception\IException $e) {
-			$this->eventDispatcher->dispatch(
-				new SixtyEightPublishers\ImageBundle\Event\UploadErrorEvent($e),
-				SixtyEightPublishers\ImageBundle\Event\UploadErrorEvent::NAME
-			);
-
-			$this->response->setCode(Nette\Http\IResponse::S406_NOT_ACCEPTABLE);
+			$this->eventDispatcher->dispatch(new FileUploadEvent($file), FileUploadEvent::NAME);
+		} catch (ExceptionInterface $e) {
+			$this->eventDispatcher->dispatch(new UploadErrorEvent($e), UploadErrorEvent::NAME);
+			$this->response->setCode(IResponse::S406_NOT_ACCEPTABLE);
 		}
 	}
 
@@ -97,10 +95,7 @@ final class DropZoneControl extends SixtyEightPublishers\SmartNetteComponent\UI\
 	 */
 	public function handleCompleted(?int $filesCount = NULL): void
 	{
-		$this->eventDispatcher->dispatch(
-			new SixtyEightPublishers\ImageBundle\Event\UploadCompletedEvent($filesCount),
-			SixtyEightPublishers\ImageBundle\Event\UploadCompletedEvent::NAME
-		);
+		$this->eventDispatcher->dispatch(new UploadCompletedEvent($filesCount), UploadCompletedEvent::NAME);
 	}
 
 	/**
@@ -114,11 +109,11 @@ final class DropZoneControl extends SixtyEightPublishers\SmartNetteComponent\UI\
 	{
 		$this->template->setTranslator($this->getPrefixedTranslator());
 
-		$this->template->settings = Nette\Utils\Json::encode(array_merge([
+		$this->template->settings = Json::encode(array_merge([
 			'url' => $this->link('upload!'),
 		], $this->settings));
-		
-		$this->template->extensions = Nette\Utils\Json::encode(array_merge($this->getDefaultExtensions(), $this->extensions));
+
+		$this->template->extensions = Json::encode(array_merge($this->getDefaultExtensions(), $this->extensions));
 		$this->template->contentHtml = $this->contentHtml;
 		$this->template->dropzoneId = $this->dropZoneId ?? ($this->getUniqueId() . '--dropzone');
 
@@ -128,11 +123,11 @@ final class DropZoneControl extends SixtyEightPublishers\SmartNetteComponent\UI\
 	/**
 	 * @param \Nette\Utils\IHtmlString $htmlString
 	 *
-	 * @return \SixtyEightPublishers\ImageBundle\Control\DropZone\DropZoneControl
+	 * @return \SixtyEightPublishers\FileBundle\Control\DropZone\DropZoneControl
 	 */
-	public function addContentHtml(Nette\Utils\IHtmlString $htmlString): self
+	public function addContentHtml(IHtmlString $htmlString): self
 	{
-		if ($htmlString instanceof Content\ITranslatableHtmlString) {
+		if ($htmlString instanceof Content\TranslatableHtmlStringInterface) {
 			$htmlString->setTranslator($this->getPrefixedTranslator());
 		}
 
@@ -148,7 +143,7 @@ final class DropZoneControl extends SixtyEightPublishers\SmartNetteComponent\UI\
 	/**
 	 * @param array $settings
 	 *
-	 * @return \SixtyEightPublishers\ImageBundle\Control\DropZone\DropZoneControl
+	 * @return \SixtyEightPublishers\FileBundle\Control\DropZone\DropZoneControl
 	 */
 	public function setSettings(array $settings): self
 	{
@@ -163,7 +158,7 @@ final class DropZoneControl extends SixtyEightPublishers\SmartNetteComponent\UI\
 	 * @param string $key
 	 * @param mixed  $value
 	 *
-	 * @return \SixtyEightPublishers\ImageBundle\Control\DropZone\DropZoneControl
+	 * @return \SixtyEightPublishers\FileBundle\Control\DropZone\DropZoneControl
 	 */
 	public function addSetting(string $key, $value): self
 	{
@@ -179,7 +174,7 @@ final class DropZoneControl extends SixtyEightPublishers\SmartNetteComponent\UI\
 	/**
 	 * @param array $accepted
 	 *
-	 * @return \SixtyEightPublishers\ImageBundle\Control\DropZone\DropZoneControl
+	 * @return \SixtyEightPublishers\FileBundle\Control\DropZone\DropZoneControl
 	 */
 	public function setAccepted(array $accepted): self
 	{
@@ -191,7 +186,7 @@ final class DropZoneControl extends SixtyEightPublishers\SmartNetteComponent\UI\
 			} elseif (preg_match('~^\.[\w\.]+$~', $accept)) {
 				$this->acceptedExtensions[] = $accept;
 			} else {
-				throw new SixtyEightPublishers\ImageBundle\Exception\InvalidArgumentException(sprintf(
+				throw new InvalidArgumentException(sprintf(
 					'Accepted file type "%s" is not valid mime-type or file extension.',
 					$accept
 				));
@@ -206,7 +201,7 @@ final class DropZoneControl extends SixtyEightPublishers\SmartNetteComponent\UI\
 	/**
 	 * @param string $dropZoneId
 	 *
-	 * @return \SixtyEightPublishers\ImageBundle\Control\DropZone\DropZoneControl
+	 * @return \SixtyEightPublishers\FileBundle\Control\DropZone\DropZoneControl
 	 */
 	public function setDropZoneId(string $dropZoneId): self
 	{
@@ -219,7 +214,7 @@ final class DropZoneControl extends SixtyEightPublishers\SmartNetteComponent\UI\
 	 * @param string $name
 	 * @param array  $options
 	 *
-	 * @return \SixtyEightPublishers\ImageBundle\Control\DropZone\DropZoneControl
+	 * @return \SixtyEightPublishers\FileBundle\Control\DropZone\DropZoneControl
 	 */
 	public function addExtension(string $name, array $options = []): self
 	{
@@ -229,19 +224,11 @@ final class DropZoneControl extends SixtyEightPublishers\SmartNetteComponent\UI\
 	}
 
 	/**
-	 * @return string
-	 */
-	protected function createPrefixedTranslatorDomain(): string
-	{
-		return str_replace('\\', '_', static::class);
-	}
-
-	/**
 	 * @param \Nette\Http\FileUpload $upload
 	 *
 	 * @return bool
 	 */
-	private function isUploadAcceptable(Nette\Http\FileUpload $upload): bool
+	private function isUploadAcceptable(FileUpload $upload): bool
 	{
 		if (empty($this->acceptedMimeTypes) && empty($this->acceptedExtensions)) {
 			return TRUE;
@@ -258,10 +245,10 @@ final class DropZoneControl extends SixtyEightPublishers\SmartNetteComponent\UI\
 			}
 		}
 
-		$name = $upload->getName();
+		$name = $upload->getUntrustedName();
 
 		foreach ($this->acceptedExtensions as $acceptedExtension) {
-			if (Nette\Utils\Strings::endsWith($name, $acceptedExtension)) {
+			if (Strings::endsWith($name, $acceptedExtension)) {
 				return TRUE;
 			}
 		}

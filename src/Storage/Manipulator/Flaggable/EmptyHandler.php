@@ -2,14 +2,25 @@
 
 declare(strict_types=1);
 
-namespace SixtyEightPublishers\ImageBundle\Storage\Manipulator\Flaggable;
+namespace SixtyEightPublishers\FileBundle\Storage\Manipulator\Flaggable;
 
-final class EmptyHandler
+use SixtyEightPublishers\FileBundle\Entity\FileInterface;
+use SixtyEightPublishers\FileBundle\Storage\Options\OptionsInterface;
+
+final class EmptyHandler implements FlagHandlerInterface
 {
 	/**
-	 * @return void
+	 * {@inheritDoc}
 	 */
-	public function __invoke(): void
+	public function canHandle(FileInterface $file): bool
+	{
+		return TRUE;
+	}
+
+	/**
+	 * {@inheritDoc}
+	 */
+	public function __invoke(OptionsInterface $options, FileInterface $file, bool $unique = FALSE): void
 	{
 	}
 }

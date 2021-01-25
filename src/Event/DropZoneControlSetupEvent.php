@@ -2,33 +2,30 @@
 
 declare(strict_types=1);
 
-namespace SixtyEightPublishers\ImageBundle\Event;
+namespace SixtyEightPublishers\FileBundle\Event;
 
-use Nette;
-use Symfony;
-use SixtyEightPublishers;
+use Symfony\Contracts\EventDispatcher\Event;
+use SixtyEightPublishers\FileBundle\Control\DropZone\DropZoneControl;
 
-final class DropZoneControlSetupEvent extends Symfony\Contracts\EventDispatcher\Event
+final class DropZoneControlSetupEvent extends Event
 {
-	use Nette\SmartObject;
+	public const NAME = 'file_bundle.drop_zone_control_setup';
 
-	public const NAME = 'image_bundle.drop_zone_control_setup';
-
-	/** @var \SixtyEightPublishers\ImageBundle\Control\DropZone\DropZoneControl  */
+	/** @var \SixtyEightPublishers\FileBundle\Control\DropZone\DropZoneControl  */
 	private $dropZoneControl;
 
 	/**
-	 * @param \SixtyEightPublishers\ImageBundle\Control\DropZone\DropZoneControl $dropZoneControl
+	 * @param \SixtyEightPublishers\FileBundle\Control\DropZone\DropZoneControl $dropZoneControl
 	 */
-	public function __construct(SixtyEightPublishers\ImageBundle\Control\DropZone\DropZoneControl $dropZoneControl)
+	public function __construct(DropZoneControl $dropZoneControl)
 	{
 		$this->dropZoneControl = $dropZoneControl;
 	}
 
 	/**
-	 * @return \SixtyEightPublishers\ImageBundle\Control\DropZone\DropZoneControl
+	 * @return \SixtyEightPublishers\FileBundle\Control\DropZone\DropZoneControl
 	 */
-	public function getDropZoneControl(): SixtyEightPublishers\ImageBundle\Control\DropZone\DropZoneControl
+	public function getDropZoneControl(): DropZoneControl
 	{
 		return $this->dropZoneControl;
 	}

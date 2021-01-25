@@ -2,15 +2,14 @@
 
 declare(strict_types=1);
 
-namespace SixtyEightPublishers\ImageBundle\Storage;
+namespace SixtyEightPublishers\FileBundle\Storage;
 
-use Nette;
-use Doctrine;
+use Doctrine\Common\Collections\Collection;
+use Doctrine\Common\Collections\ArrayCollection;
 
-final class CallbackDataStorage implements IDataStorage
+final class CallbackDataStorage implements DataStorageInterface
 {
-	use Nette\SmartObject,
-		TDataStorage;
+	use DataStorageTrait;
 
 	/** @var callable  */
 	protected $callback;
@@ -23,15 +22,13 @@ final class CallbackDataStorage implements IDataStorage
 		$this->callback = $callback;
 	}
 
-	/*************** interface \SixtyEightPublishers\ImageBundle\Storage\IDataStorage ***************/
-
 	/**
 	 * {@inheritdoc}
 	 */
-	public function getImages(): Doctrine\Common\Collections\Collection
+	public function getFiles(): Collection
 	{
 		$cb = $this->callback;
 
-		return new Doctrine\Common\Collections\ArrayCollection((array) $cb());
+		return new ArrayCollection((array) $cb());
 	}
 }

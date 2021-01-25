@@ -2,14 +2,13 @@
 
 declare(strict_types=1);
 
-namespace SixtyEightPublishers\ImageBundle\Control\DropZone\Content;
+namespace SixtyEightPublishers\FileBundle\Control\DropZone\Content;
 
-use Nette;
+use Nette\Utils\Html;
 
-final class Title implements ITranslatableHtmlString
+final class Title implements TranslatableHtmlStringInterface
 {
-	use Nette\SmartObject,
-		TTranslatableHtmlString;
+	use TranslatableHtmlStringTrait;
 
 	/** @var string  */
 	private $title;
@@ -27,14 +26,12 @@ final class Title implements ITranslatableHtmlString
 		$this->translate = $translate;
 	}
 
-	/************* interface \SixtyEightPublishers\ImageBundle\Control\DropZone\Content\ITranslatableHtmlString *************/
-
 	/**
 	 * {@inheritdoc}
 	 */
 	public function __toString(): string
 	{
-		$html = Nette\Utils\Html::el('span')
+		$html = Html::el('span')
 			->setText($this->translate ? $this->getTranslator()->translate($this->title) : $this->title);
 
 		return (string) $html;

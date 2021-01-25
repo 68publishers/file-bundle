@@ -2,26 +2,31 @@
 
 declare(strict_types=1);
 
-namespace SixtyEightPublishers\ImageBundle\Storage\Manipulator;
+namespace SixtyEightPublishers\FileBundle\Storage\Manipulator;
 
-use Nette;
-use SixtyEightPublishers;
+use Throwable;
+use SixtyEightPublishers\DoctrinePersistence\TransactionInterface;
+use SixtyEightPublishers\FileBundle\Exception\InvalidStateException;
+use SixtyEightPublishers\FileBundle\Storage\Options\OptionsInterface;
+use SixtyEightPublishers\EventDispatcherExtra\EventDispatcherAwareTrait;
+use SixtyEightPublishers\FileBundle\Exception\FileManipulationException;
+use SixtyEightPublishers\FileBundle\Event\ExtendManipulatorTransactionEvent;
 
-abstract class AbstractManipulator implements IManipulator
+abstract class AbstractManipulator implements ManipulatorInterface
 {
-	use Nette\SmartObject;
+	use EventDispatcherAwareTrait;
 
 	/**
 	 * {@inheritDoc}
 	 *
-	 * @throws \SixtyEightPublishers\ImageBundle\Exception\InvalidStateException
+	 * @throws \SixtyEightPublishers\FileBundle\Exception\InvalidStateException
 	 */
-	public function manipulate(SixtyEightPublishers\ImageBundle\Storage\Options\IOptions $options, ...$args)
+	public function manipulate(OptionsInterface $options, ...$args)
 	{
 		$cb = $this;
 
 		if (!is_callable($cb)) {
-			throw new SixtyEightPublishers\ImageBundle\Exception\InvalidStateException(sprintf(
+			throw new InvalidStateException(sprintf(
 				'Class %s is not callable, please implement method %s::__invoke().',
 				static::class,
 				static::class
@@ -30,10 +35,24 @@ abstract class AbstractManipulator implements IManipulator
 
 		try {
 			return $cb($options, ...$args);
-		} catch (SixtyEightPublishers\ImageBundle\Exception\ImageManipulationException $e) {
+		} catch (FileManipulationException $e) {
 			throw $e;
-		} catch (\Throwable $e) {
-			throw SixtyEightPublishers\ImageBundle\Exception\ImageManipulationException::error(static::class, 0, $e);
+		} catch (Throwable $e) {
+			throw FileManipulationException::error(static::class, 0, $e);
 		}
+	}
+
+	/**
+	 * @param \SixtyEightPublishers\DoctrinePersistence\TransactionInterface    $transaction
+	 * @param \SixtyEightPublishers\FileBundle\Storage\Options\OptionsInterface $options
+	 *
+	 * @return void
+	 */
+	protected function dispatchExtendTransactionEvent(TransactionInterface $transaction, OptionsInterface $options): void
+	{
+		$this->getEventDispatcher()->dispatch(
+			new ExtendManipulatorTransactionEvent(static::class, $transaction, $options),
+			ExtendManipulatorTransactionEvent::NAME
+		);
 	}
 }

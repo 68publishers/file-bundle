@@ -2,34 +2,24 @@
 
 declare(strict_types=1);
 
-namespace SixtyEightPublishers\ImageBundle\Storage\Manipulator\Sortable;
+namespace SixtyEightPublishers\FileBundle\Storage\Manipulator\Sortable;
 
-use SixtyEightPublishers;
+use SixtyEightPublishers\FileBundle\Entity\FileInterface;
+use SixtyEightPublishers\FileBundle\Storage\Options\OptionsInterface;
+use SixtyEightPublishers\FileBundle\Storage\Manipulator\AbstractManipulator;
+use SixtyEightPublishers\FileBundle\Storage\Manipulator\ExternalAssociationStorageAwareTrait;
+use SixtyEightPublishers\FileBundle\Storage\Manipulator\ExternalAssociationStorageAwareInterface;
 
-abstract class AbstractSortableManipulator extends SixtyEightPublishers\ImageBundle\Storage\Manipulator\AbstractManipulator implements ISortableManipulator, SixtyEightPublishers\ImageBundle\Storage\Manipulator\IExternalAssociationStorageAware
+abstract class AbstractSortableManipulator extends AbstractManipulator implements SortableManipulatorInterface, ExternalAssociationStorageAwareInterface
 {
-	use SixtyEightPublishers\ImageBundle\Storage\Manipulator\TExternalAssociationStorageAware;
-
-	/**
-	 * Return TRUE if everything is OK otherwise return FALSE or better throw an exception.
-	 *
-	 * @param \SixtyEightPublishers\ImageBundle\Storage\Options\IOptions   $options
-	 * @param \SixtyEightPublishers\ImageBundle\DoctrineEntity\IImage      $sortedImage
-	 * @param \SixtyEightPublishers\ImageBundle\DoctrineEntity\IImage|null $previousImage
-	 * @param \SixtyEightPublishers\ImageBundle\DoctrineEntity\IImage|null $nextImage
-	 *
-	 * @return bool
-	 */
-	abstract public function doSort(SixtyEightPublishers\ImageBundle\Storage\Options\IOptions $options, SixtyEightPublishers\ImageBundle\DoctrineEntity\IImage $sortedImage, ?SixtyEightPublishers\ImageBundle\DoctrineEntity\IImage $previousImage, ?SixtyEightPublishers\ImageBundle\DoctrineEntity\IImage $nextImage): bool;
-
-	/********** interface \SixtyEightPublishers\ImageBundle\Storage\Manipulator\ISortableManipulator **********/
+	use ExternalAssociationStorageAwareTrait;
 
 	/**
 	 * {@inheritdoc}
 	 */
-	public function __invoke(SixtyEightPublishers\ImageBundle\Storage\Options\IOptions $options, SixtyEightPublishers\ImageBundle\DoctrineEntity\IImage $sortedImage, ?SixtyEightPublishers\ImageBundle\DoctrineEntity\IImage $previousImage = NULL, ?SixtyEightPublishers\ImageBundle\DoctrineEntity\IImage $nextImage = NULL): void
+	public function __invoke(OptionsInterface $options, FileInterface $sortedFile, ?FileInterface $previousFile = NULL, ?FileInterface $nextFile = NULL): void
 	{
-		if (FALSE === $this->doSort($options, $sortedImage, $previousImage, $nextImage)) {
+		if (FALSE === $this->doSort($options, $sortedFile, $previousFile, $nextFile)) {
 			return;
 		}
 
@@ -41,13 +31,13 @@ abstract class AbstractSortableManipulator extends SixtyEightPublishers\ImageBun
 		}
 
 		$references = $associationStorage->getReferences();
-		$sortedReference = $references->find((string) $sortedImage->getId());
+		$sortedReference = $references->find((string) $sortedFile->getId());
 
 		if (NULL === $sortedReference) {
 			return;
 		}
 
-		$previousReference = NULL !== $previousImage ? $references->find((string) $previousImage->getId()) : NULL;
+		$previousReference = NULL !== $previousFile ? $references->find((string) $previousFile->getId()) : NULL;
 
 		if (NULL !== $previousReference) {
 			$references->moveAfter($sortedReference, $previousReference);
@@ -56,11 +46,23 @@ abstract class AbstractSortableManipulator extends SixtyEightPublishers\ImageBun
 			return;
 		}
 
-		$nextReference = NULL !== $nextImage ? $references->find((string) $nextImage->getId()) : NULL;
+		$nextReference = NULL !== $nextFile ? $references->find((string) $nextFile->getId()) : NULL;
 
 		if (NULL !== $nextReference) {
 			$references->moveBefore($sortedReference, $nextReference);
 			$associationStorage->flush();
 		}
 	}
+
+	/**
+	 * Return TRUE if everything is OK otherwise return FALSE or better throw an exception.
+	 *
+	 * @param \SixtyEightPublishers\FileBundle\Storage\Options\OptionsInterface $options
+	 * @param \SixtyEightPublishers\FileBundle\Entity\FileInterface             $sortedFile
+	 * @param \SixtyEightPublishers\FileBundle\Entity\FileInterface|NULL        $previousFile
+	 * @param \SixtyEightPublishers\FileBundle\Entity\FileInterface|NULL        $nextFile
+	 *
+	 * @return bool
+	 */
+	abstract public function doSort(OptionsInterface $options, FileInterface $sortedFile, ?FileInterface $previousFile, ?FileInterface $nextFile): bool;
 }

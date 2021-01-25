@@ -1,0 +1,42 @@
+message:
+	# JS (dropzone) errors
+	dict_file_too_big: 'File {{fileName}} is too big ({{filesize}}MiB). Maximal size is {{maxFilesize}}MiB.'
+	dict_invalid_file_type: 'File type {{fileName}} is not supported.'
+	dict_response_error: 'File {{fileName}} failed to upload.'
+	dict_max_files_exceeded: 'File {{fileName}} failed to upload because the maximum number of photos has been exceeded.'
+
+	# messages from NotificationEventSubscriber
+	upload_completed: '''
+		{1} File was uploaded.
+		|[1,Inf[ %count% files was uploaded.
+	'''
+	upload_error:
+		default: Upload failed.
+		strict_dimensions_validator: 'Uploaded image is %width%x%height% but allowed dimensions are %allowed% only.'
+		relative_dimensions_validator:
+			gte_both: File must be at least %required_width%x%required_height%.
+			gte_width: File must be at least %required_width% pixels wide.
+			gte_height: File must be at least %required_height% pixels tall.
+			lte_both: File must be at most %required_width%x%required_height%.
+			lte_width: File must be at most %required_width% pixels wide.
+			lte_height: File must be at most %required_height% pixels tall.
+	action_success:
+		delete: File was deleted.
+		rotate_left: Image was rotated.
+		rotate_right: Image was rotated.
+	action_error:
+		delete:
+			default: Failed to remove file.
+		rotate_left:
+			default: Couldn't rotate image.
+		rotate_right:
+			default: Couldn't rotate image.
+		sort:
+			default: Couldn't sort files.
+
+denied_upload_message: More files cannot be uploaded.
+
+action:
+	delete: Delete
+	rotate_left: Rotate left
+	rotate_right: Rotate right

@@ -2,33 +2,30 @@
 
 declare(strict_types=1);
 
-namespace SixtyEightPublishers\ImageBundle\Event;
+namespace SixtyEightPublishers\FileBundle\Event;
 
-use Nette;
-use Symfony;
-use SixtyEightPublishers;
+use Symfony\Contracts\EventDispatcher\Event;
+use SixtyEightPublishers\FileBundle\Exception\ExceptionInterface;
 
-final class UploadErrorEvent extends Symfony\Contracts\EventDispatcher\Event
+final class UploadErrorEvent extends Event
 {
-	use Nette\SmartObject;
+	public const NAME = 'file_bundle.upload_error';
 
-	public const NAME = 'image_bundle.upload_error';
-
-	/** @var \SixtyEightPublishers\ImageBundle\Exception\IException  */
+	/** @var \SixtyEightPublishers\FileBundle\Exception\ExceptionInterface  */
 	private $exception;
 
 	/**
-	 * @param \SixtyEightPublishers\ImageBundle\Exception\IException $exception
+	 * @param \SixtyEightPublishers\FileBundle\Exception\ExceptionInterface $exception
 	 */
-	public function __construct(SixtyEightPublishers\ImageBundle\Exception\IException $exception)
+	public function __construct(ExceptionInterface $exception)
 	{
 		$this->exception = $exception;
 	}
 
 	/**
-	 * @return \SixtyEightPublishers\ImageBundle\Exception\IException
+	 * @return \SixtyEightPublishers\FileBundle\Exception\ExceptionInterface
 	 */
-	public function getException(): SixtyEightPublishers\ImageBundle\Exception\IException
+	public function getException(): ExceptionInterface
 	{
 		return $this->exception;
 	}

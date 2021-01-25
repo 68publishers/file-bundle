@@ -2,8 +2,8 @@
 
 declare(strict_types=1);
 
-namespace SixtyEightPublishers\ImageBundle\Exception;
+namespace SixtyEightPublishers\FileBundle\Exception;
 
-final class InvalidArgumentException extends \InvalidArgumentException implements IException
+final class InvalidArgumentException extends \InvalidArgumentException implements ExceptionInterface
 {
 }

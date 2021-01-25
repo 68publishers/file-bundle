@@ -1,0 +1,81 @@
+{varType string $originalTemplateFile}
+{varType Doctrine\Common\Collections\Collection|SixtyEightPublishers\FileBundle\Entity\FileInterface[] $files}
+{varType int $maxAllowedFiles}
+{varType string $uniqueId}
+{varType bool $isSaveable}
+{varType callable $getActions}
+{varType bool $allowUpload}
+{varType bool $denyUpload}
+{varType bool $sortable}
+{varType string|null $sortableRequest}
+
+<div class="container file-manager">
+	<div n:block="#upload" n:if="TRUE === $isSaveable" class="row">
+		<div class="col-12 mb-5">
+			<div class="thumbnail text-center thumbnail-dropzone">
+				{snippet upload}
+					{if TRUE === $denyUpload}
+						{block #upload_deny_message}
+							<span class="dz-message">
+								{_'denied_upload_message'}
+							</span>
+						{/block}
+					{else}
+						{block #upload_dropzone}
+							{control dropZone}
+						{/block}
+					{/if}
+				{/snippet}
+			</div>
+		</div>
+	</div>
+
+	<div n:block="#files" n:inner-snippet="files" class="row" {if $sortable}data-file-manager-sortable-container="{$sortableRequest}"{/if}>
+		{foreach $files as $file}
+			<div n:block="#file" class="col-auto text-center mb-5" {if $sortable}data-file-manager-sortable-item="{$file->getId()}"{/if}>
+				<div class="d-inline-block position-relative">
+					<div class="thumbnail" style="width: 150px; height: 150px">
+						{var $actions = $getActions($file)}
+
+							<div n:block="#actions" n:if="count($actions)" class="file-manager-actions position-absolute text-right right-0 top-0">
+							<div class="dropdown">
+									<span n:block="#actions_button" class="dropdown-ellipses dropdown-toggle btbtn-secondary btn-sm bg-white" id="file-actions-{$uniqueId}-{$file->getId()}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+										<i n:block="#actions_button_icon" class="fa fa-bars"></i>
+									</span>
+								<div n:block="#actions_menu" class="dropdown-menu dropdown-menu-right" aria-labelledby="file-actions-{$uniqueId}-{$file->getId()}">
+									<a n:foreach="$actions as $action" n:href="doAction!, actionName => $action->getName(), id => (string) $file->getId()" class="dropdown-item ajax">{_'action.' . $action->getLabel()}</a>
+								</div>
+							</div>
+						</div>
+
+						{block #file_content}
+							{if interface_exists('SixtyEightPublishers\ImageStorage\FileInfoInterface') && $file->getSource() instanceof SixtyEightPublishers\ImageStorage\FileInfoInterface}
+								{block #file_image}
+									{var $file = $file->getSource()->withModifiers([w => +150, h => 150])->withExt(pjpg)}
+									{var $descriptor = x_descriptor(1, 2, 3)}
+
+									<picture>
+										<source srcset="{$file->withExt(webp)->srcSet($descriptor)}" type="image/webp">
+										<source srcset="{$file->srcSet($descriptor)}">
+										<img srcset="{$file->srcSet($descriptor)}" src="{$file}" class="img-fluig" alt="" width="150" height="150">
+									</picture>
+								{/block}
+							{else}
+								{block #file_base}
+									<div class="d-flex align-items-center bg-light w-100 h-100">
+										<i class="fa fa-file fa-7x d-block w-100 color-secondary"></i>
+										<span class="position-absolute left-0 right-0 font-weight-bold">{$file->getSource()->getExtension() ?? $file->getMetadata(SixtyEightPublishers\FileBundle\ResourceMetadata\MetadataName::MIME, '')|upper}</span>
+									</div>
+								{/block}
+							{/if}
+						{/block}
+
+						<div n:block="#file_title" class="mt-1 text-break">
+							{$file->getMetadata(SixtyEightPublishers\FileBundle\ResourceMetadata\MetadataName::NAME, ' ')}
+						</div>
+					</div>
+				</div>
+			</div>
+		{/foreach}
+	</div>
+</div>

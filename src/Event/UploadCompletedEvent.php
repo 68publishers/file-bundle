@@ -2,16 +2,13 @@
 
 declare(strict_types=1);
 
-namespace SixtyEightPublishers\ImageBundle\Event;
+namespace SixtyEightPublishers\FileBundle\Event;
 
-use Nette;
-use Symfony;
+use Symfony\Contracts\EventDispatcher\Event;
 
-final class UploadCompletedEvent extends Symfony\Contracts\EventDispatcher\Event
+final class UploadCompletedEvent extends Event
 {
-	use Nette\SmartObject;
-
-	public const NAME = 'image_bundle.upload_completed';
+	public const NAME = 'file_bundle.upload_completed';
 
 	/** @var int  */
 	private $filesCount;

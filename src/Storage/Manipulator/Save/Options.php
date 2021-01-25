@@ -2,28 +2,26 @@
 
 declare(strict_types=1);
 
-namespace SixtyEightPublishers\ImageBundle\Storage\Manipulator\Save;
+namespace SixtyEightPublishers\FileBundle\Storage\Manipulator\Save;
 
-use Nette;
-use Ramsey;
-use SixtyEightPublishers;
+use Ramsey\Uuid\Uuid;
+use Nette\Utils\Strings;
+use Nette\Http\FileUpload;
+use SixtyEightPublishers\FileBundle\Storage\Options\OptionsInterface;
 
 final class Options
 {
-	use Nette\SmartObject;
+	public const NAMESPACE = 'save_manipulator.namespace';
+	public const SOURCE_NAME_CALLBACK = 'save_manipulator.source_name_callback';
+	public const CUSTOM_RESOURCE_METADATA = 'save_manipulator.custom_resource_metadata';
 
-	public const    NAMESPACE = 'save_manipulator.namespace',
-					SOURCE_NAME_CALLBACK = 'save_manipulator.source_name_callback',
-					CUSTOM_RESOURCE_METADATA = 'save_manipulator.custom_resource_metadata',
-					TRANSACTION_EXTENSION_CALLBACK = 'save_manipulator.transaction_extension_callback';
-
-	/** @var \SixtyEightPublishers\ImageBundle\Storage\Options\IOptions  */
+	/** @var \SixtyEightPublishers\FileBundle\Storage\Options\OptionsInterface  */
 	private $options;
 
 	/**
-	 * @param \SixtyEightPublishers\ImageBundle\Storage\Options\IOptions $options
+	 * @param \SixtyEightPublishers\FileBundle\Storage\Options\OptionsInterface $options
 	 */
-	public function __construct(SixtyEightPublishers\ImageBundle\Storage\Options\IOptions $options)
+	public function __construct(OptionsInterface $options)
 	{
 		$this->options = $options;
 	}
@@ -42,7 +40,7 @@ final class Options
 	 * @return string
 	 * @throws \Exception
 	 */
-	public function getSourceName(Nette\Http\FileUpload $fileUpload): string
+	public function getSourceName(FileUpload $fileUpload): string
 	{
 		if ($this->options->has(self::SOURCE_NAME_CALLBACK, 'callable')) {
 			$cb = $this->options->get(self::SOURCE_NAME_CALLBACK);
@@ -50,13 +48,9 @@ final class Options
 			return (string) $cb($fileUpload);
 		}
 
-		$extension = Nette\Utils\Strings::lower(pathinfo($fileUpload->getName(), PATHINFO_EXTENSION));
+		$extension = Strings::lower(pathinfo($fileUpload->getUntrustedName(), PATHINFO_EXTENSION));
 
-		if (empty($extension) || !SixtyEightPublishers\ImageStorage\Helper\SupportedType::isExtensionSupported($extension)) {
-			$extension = SixtyEightPublishers\ImageStorage\Helper\SupportedType::getDefaultExtension();
-		}
-
-		return Ramsey\Uuid\Uuid::uuid4()->toString() . '.' . $extension;
+		return Uuid::uuid4()->toString() . (empty($extension) ? '' : '.' . $extension);
 	}
 
 	/**
@@ -65,19 +59,5 @@ final class Options
 	public function getCustomMetadata(): array
 	{
 		return $this->options->has(self::CUSTOM_RESOURCE_METADATA, 'array') ? $this->options->get(self::CUSTOM_RESOURCE_METADATA) : [];
-	}
-
-	/**
-	 * @param \SixtyEightPublishers\DoctrinePersistence\Transaction\ITransaction $transaction
-	 *
-	 * @return void
-	 */
-	public function extendTransaction(SixtyEightPublishers\DoctrinePersistence\Transaction\ITransaction $transaction): void
-	{
-		if ($this->options->has(self::TRANSACTION_EXTENSION_CALLBACK, 'callable')) {
-			$cb = $this->options->get(self::TRANSACTION_EXTENSION_CALLBACK);
-
-			$cb($transaction);
-		}
 	}
 }
