@@ -35,7 +35,7 @@ class DeleteManipulator extends AbstractManipulator implements DeleteManipulator
 		$transaction = $this->transactionFactory->create(static function (EntityManagerInterface $em, FileInterface $file) {
 			$em->remove($file);
 
-			return $file->getSource();
+			return $file;
 		}, [
 			'file' => $file,
 			'options' => $options,
