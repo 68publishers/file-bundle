@@ -41,3 +41,4 @@ action:
 	delete: Odstranit
 	rotate_left: Otočit vlevo
 	rotate_right: Otočit vpravo
+	download: Stáhnout

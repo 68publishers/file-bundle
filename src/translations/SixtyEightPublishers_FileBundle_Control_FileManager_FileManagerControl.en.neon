@@ -40,3 +40,4 @@ action:
 	delete: Delete
 	rotate_left: Rotate left
 	rotate_right: Rotate right
+	download: Download

@@ -39,11 +39,17 @@
 
 							<div n:block="#actions" n:if="count($actions)" class="file-manager-actions position-absolute text-right right-0 top-0">
 							<div class="dropdown">
-									<span n:block="#actions_button" class="dropdown-ellipses dropdown-toggle btbtn-secondary btn-sm bg-white" id="file-actions-{$uniqueId}-{$file->getId()}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-										<i n:block="#actions_button_icon" class="fa fa-bars"></i>
-									</span>
+								<span n:block="#actions_button" class="dropdown-ellipses dropdown-toggle btbtn-secondary btn-sm bg-white" id="file-actions-{$uniqueId}-{$file->getId()}" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+									<i n:block="#actions_button_icon" class="fa fa-bars"></i>
+								</span>
 								<div n:block="#actions_menu" class="dropdown-menu dropdown-menu-right" aria-labelledby="file-actions-{$uniqueId}-{$file->getId()}">
-									<a n:foreach="$actions as $action" n:href="doAction!, actionName => $action->getName(), id => (string) $file->getId()" class="dropdown-item ajax">{_'action.' . $action->getLabel()}</a>
+									{foreach $actions as $action}
+										{ifset block action_type_ . $action->getName()}
+											{include block action_type_ . $action->getName(), $action, $file}
+										{else}
+											<a n:href="doAction!, actionName => $action->getName(), id => (string) $file->getId()" class="dropdown-item ajax">{_'action.' . $action->getLabel()}</a>
+										{/ifset}
+									{/foreach}
 								</div>
 							</div>
 						</div>
@@ -79,3 +85,10 @@
 		{/foreach}
 	</div>
 </div>
+
+{define action_type_download, $action, $file}
+	{var $isImage = interface_exists('SixtyEightPublishers\ImageStorage\FileInfoInterface') && $file->getSource() instanceof SixtyEightPublishers\ImageStorage\FileInfoInterface}
+	{var $source = $isImage ? $file->getSource()->withModifiers([original => TRUE]) : $file->getSource()}
+
+	<a href="{$source->link()}" target="_blank" class="dropdown-item" data-file-manager-download="{$file->getMetadata(SixtyEightPublishers\FileBundle\ResourceMetadata\MetadataName::NAME, '')}">{_'action.' . $action->getLabel()}</a>
+{/define}
