@@ -256,8 +256,11 @@ final class NotificationEventSubscriber implements EventSubscriberInterface
 	{
 		$notifier = $this->getNotifier();
 
-		if ($e instanceof TranslatableException) {
-			return $notifier->error($messageBase . '.' . $e->getMessage(), $e->getArgs());
+		if ($e instanceof TranslatableException || $e->getPrevious() instanceof TranslatableException) {
+			$translatableException = $e instanceof TranslatableException ? $e : $e->getPrevious();
+			assert($translatableException instanceof TranslatableException);
+
+			return $notifier->error($messageBase . '.' . $translatableException->getMessage(), $translatableException->getArgs());
 		}
 
 		return $notifier->error($messageBase . '.default', [
