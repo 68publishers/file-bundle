@@ -67,8 +67,7 @@ abstract class AbstractFile implements FileInterface
 		$this->created = new DateTime('now', new DateTimeZone('UTC'));
 		$this->updated = new DateTime('now', new DateTimeZone('UTC'));
 
-		$this->setSource($fileInfo);
-		$fileInfo->setVersion($this->createSourceVersion($this->created));
+		$this->setSource($fileInfo->withVersion($this->createSourceVersion($this->created)));
 	}
 
 	/**
@@ -135,8 +134,7 @@ abstract class AbstractFile implements FileInterface
 	public function update(): void
 	{
 		$this->updated = new DateTime('now', new DateTimeZone('UTC'));
-		$this->setSource($source = clone $this->getSource());
-		$source->setVersion($this->createSourceVersion($this->updated));
+		$this->setSource($this->getSource()->withVersion($this->createSourceVersion($this->updated)));
 	}
 
 	/**

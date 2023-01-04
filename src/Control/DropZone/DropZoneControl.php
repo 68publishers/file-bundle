@@ -10,7 +10,7 @@ use Nette\Utils\Strings;
 use Nette\Http\IResponse;
 use Nette\Http\FileUpload;
 use Nette\Utils\IHtmlString;
-use SixtyEightPublishers\SmartNetteComponent\UI\Control;
+use Nette\Application\UI\Control;
 use SixtyEightPublishers\FileBundle\Event\FileUploadEvent;
 use SixtyEightPublishers\FileBundle\Event\UploadErrorEvent;
 use SixtyEightPublishers\FileBundle\Exception\UploadException;
@@ -21,11 +21,13 @@ use SixtyEightPublishers\TranslationBridge\TranslatorAwareInterface;
 use SixtyEightPublishers\FileBundle\Exception\InvalidArgumentException;
 use SixtyEightPublishers\EventDispatcherExtra\EventDispatcherAwareTrait;
 use SixtyEightPublishers\EventDispatcherExtra\EventDispatcherAwareInterface;
+use SixtyEightPublishers\SmartNetteComponent\Bridge\Nette\Application\TemplateResolverTrait;
 
 final class DropZoneControl extends Control implements TranslatorAwareInterface, EventDispatcherAwareInterface
 {
 	use TranslatorAwareTrait;
 	use EventDispatcherAwareTrait;
+	use TemplateResolverTrait;
 
 	/** @var \Nette\Http\IRequest  */
 	private $request;

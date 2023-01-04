@@ -1,3 +1,5 @@
+> :warning: Warning! This package does not have active support, it exists only for the historical needs of the author.
+
 # File Bundle
 
 :city_sunset: File management bundle based on our [file-storage](https://github.com/68publishers/file-storage) for Nette Framework.

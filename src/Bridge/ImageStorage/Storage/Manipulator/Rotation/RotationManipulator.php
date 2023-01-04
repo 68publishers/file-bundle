@@ -49,7 +49,7 @@ class RotationManipulator extends AbstractManipulator implements RotationManipul
 			));
 		}
 
-		$resource->modifyImage([
+		$resource = $resource->modifyImage([
 			'o' => (string) $degrees,
 		]);
 

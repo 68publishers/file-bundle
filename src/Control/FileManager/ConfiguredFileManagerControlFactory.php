@@ -58,7 +58,11 @@ final class ConfiguredFileManagerControlFactory
 		}
 
 		if (NULL !== $config->get('template')) {
-			$this->setTemplateFile($control, $config->get('template'));
+			if (Strings::startsWith($config->get('template'), '@')) {
+				$control->setRelativeFile($config->get('template'));
+			} else {
+				$control->setFile($config->get('template'));
+			}
 		}
 
 		if (NULL !== $config->get('max_allowed_files')) {
@@ -88,7 +92,11 @@ final class ConfiguredFileManagerControlFactory
 			}
 
 			if (NULL !== $config->get('dropzone.template')) {
-				$this->setTemplateFile($control, $config->get('dropzone.template'));
+				if (Strings::startsWith($config->get('dropzone.template'), '@')) {
+					$control->setRelativeFile($config->get('dropzone.template'));
+				} else {
+					$control->setFile($config->get('dropzone.template'));
+				}
 			}
 
 			foreach ($config->get('dropzone.content_html') as $contentHtml) {
@@ -142,21 +150,6 @@ final class ConfiguredFileManagerControlFactory
 		}
 
 		return $dataStorage;
-	}
-
-	/**
-	 * @param \SixtyEightPublishers\SmartNetteComponent\UI\Control $control
-	 * @param string                                               $file
-	 *
-	 * @return void
-	 */
-	private function setTemplateFile(Control $control, string $file): void
-	{
-		if (Strings::startsWith($file, '@')) {
-			$control->setRelativeFile($file);
-		} else {
-			$control->setFile($file);
-		}
 	}
 
 	/**

@@ -8,21 +8,18 @@ use Nette\Schema\Expect;
 use Nette\Schema\Schema;
 use Nette\Schema\Helpers;
 use Nette\DI\CompilerExtension;
-use SixtyEightPublishers\DoctrineBridge\DI\TargetEntity;
-use SixtyEightPublishers\DoctrineBridge\DI\EntityMapping;
 use SixtyEightPublishers\FileBundle\Entity\FileInterface;
 use SixtyEightPublishers\FileBundle\Storage\DataStorageFactory;
 use SixtyEightPublishers\FileBundle\Entity\Basic\File as BasicFile;
 use SixtyEightPublishers\FileBundle\Exception\InvalidStateException;
+use SixtyEightPublishers\DoctrineBridge\Bridge\Nette\DI\TargetEntity;
 use SixtyEightPublishers\FileBundle\Control\FileManager\Configuration;
 use SixtyEightPublishers\FileBundle\Entity\SoftDeletableFileInterface;
+use SixtyEightPublishers\DoctrineBridge\Bridge\Nette\DI\EntityMapping;
 use SixtyEightPublishers\FileBundle\Storage\DataStorageFactoryInterface;
-use SixtyEightPublishers\DoctrineBridge\DI\TargetEntityProviderInterface;
-use SixtyEightPublishers\DoctrineBridge\DI\EntityMappingProviderInterface;
 use SixtyEightPublishers\FileStorage\Bridge\Nette\DI\FileStorageExtension;
 use SixtyEightPublishers\FileBundle\EntityFactory\DefaultFileEntityFactory;
 use SixtyEightPublishers\NotificationBundle\DI\NotificationBundleExtension;
-use SixtyEightPublishers\TranslationBridge\DI\TranslationProviderInterface;
 use SixtyEightPublishers\ImageStorage\Bridge\Nette\DI\ImageStorageExtension;
 use SixtyEightPublishers\FileBundle\EntityFactory\FileEntityFactoryInterface;
 use SixtyEightPublishers\FileBundle\Storage\Manipulator\ManipulatorInterface;
@@ -34,6 +31,9 @@ use SixtyEightPublishers\FileBundle\EventSubscriber\DeleteFileSourceEventSubscri
 use SixtyEightPublishers\FileBundle\Control\DropZone\DropZoneControlFactoryInterface;
 use SixtyEightPublishers\FileBundle\ResourceMetadata\ResourceMetadataFactoryRegistry;
 use SixtyEightPublishers\FileBundle\ResourceMetadata\ResourceMetadataFactoryInterface;
+use SixtyEightPublishers\DoctrineBridge\Bridge\Nette\DI\TargetEntityProviderInterface;
+use SixtyEightPublishers\DoctrineBridge\Bridge\Nette\DI\EntityMappingProviderInterface;
+use SixtyEightPublishers\TranslationBridge\Bridge\Nette\DI\TranslationProviderInterface;
 use SixtyEightPublishers\FileBundle\Control\FileManager\FileManagerControlFactoryInterface;
 use SixtyEightPublishers\EventDispatcherExtra\Bridge\Nette\DI\EventDispatcherExtraExtension;
 use SixtyEightPublishers\FileBundle\Control\FileManager\ConfiguredFileManagerControlFactory;
@@ -178,11 +178,11 @@ final class FileBundleExtension extends CompilerExtension implements EntityMappi
 		switch ($this->config->entity) {
 			case BasicFile::class:
 				return [
-					new EntityMapping(EntityMapping::DRIVER_ANNOTATIONS, 'SixtyEightPublishers\FileBundle\Entity', __DIR__ . '/../Entity/Basic'),
+					new EntityMapping(EntityMapping::DRIVER_ANNOTATION, 'SixtyEightPublishers\FileBundle\Entity', __DIR__ . '/../Entity/Basic'),
 				];
 			case SoftDeletableFile::class:
 				return [
-					new EntityMapping(EntityMapping::DRIVER_ANNOTATIONS, 'SixtyEightPublishers\FileBundle\Entity', __DIR__ . '/../Entity/SoftDeletable'),
+					new EntityMapping(EntityMapping::DRIVER_ANNOTATION, 'SixtyEightPublishers\FileBundle\Entity', __DIR__ . '/../Entity/SoftDeletable'),
 				];
 		}
 

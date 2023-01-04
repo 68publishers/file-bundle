@@ -6,9 +6,9 @@ namespace SixtyEightPublishers\FileBundle\Control\FileManager;
 
 use Nette\Utils\Json;
 use Nette\Http\FileUpload;
+use Nette\Application\UI\Control;
 use Doctrine\Common\Collections\Collection;
 use SixtyEightPublishers\FileBundle\Helper\MaxFileSize;
-use SixtyEightPublishers\SmartNetteComponent\UI\Control;
 use SixtyEightPublishers\FileBundle\Entity\FileInterface;
 use SixtyEightPublishers\FileBundle\Event\FileUploadEvent;
 use SixtyEightPublishers\FileBundle\Action\ActionInterface;
@@ -35,12 +35,14 @@ use SixtyEightPublishers\FileBundle\ResourceValidator\ResourceValidatorInterface
 use SixtyEightPublishers\FileBundle\Control\DropZone\DropZoneControlFactoryInterface;
 use SixtyEightPublishers\FileBundle\Storage\Manipulator\Save\SaveManipulatorInterface;
 use SixtyEightPublishers\FileBundle\Storage\Manipulator\Delete\DeleteManipulatorInterface;
+use SixtyEightPublishers\SmartNetteComponent\Bridge\Nette\Application\TemplateResolverTrait;
 use SixtyEightPublishers\FileBundle\Storage\Manipulator\Sortable\SortableManipulatorInterface;
 
 final class FileManagerControl extends Control implements TranslatorAwareInterface, EventDispatcherAwareInterface
 {
 	use TranslatorAwareTrait;
 	use EventDispatcherAwareTrait;
+	use TemplateResolverTrait;
 
 	public const DIRECTION_TOP = 'top';
 	public const DIRECTION_BOTTOM = 'bottom';
