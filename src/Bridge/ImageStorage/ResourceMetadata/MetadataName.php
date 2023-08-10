@@ -13,4 +13,5 @@ class MetadataName extends FileMetadataName
 {
 	public const WIDTH = 'width';
 	public const HEIGHT = 'height';
+	public const NUMBER_OF_FRAMES = 'number_of_frames';
 }

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace SixtyEightPublishers\FileBundle\Control\FileManager;
 
 use Nette\Utils\Strings;
-use SixtyEightPublishers\SmartNetteComponent\UI\Control;
 use SixtyEightPublishers\FileBundle\Storage\DataStorageInterface;
 use SixtyEightPublishers\FileBundle\Event\DropZoneControlSetupEvent;
 use SixtyEightPublishers\FileBundle\Exception\InvalidArgumentException;
