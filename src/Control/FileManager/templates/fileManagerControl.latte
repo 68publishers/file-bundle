@@ -30,7 +30,7 @@
 		</div>
 	</div>
 
-	<div n:block="#files" n:inner-snippet="files" class="row" {if $sortable}data-file-manager-sortable-container="{$sortableRequest}"{/if}>
+	<div n:block="#files" n:snippet="files" class="row" {if $sortable}data-file-manager-sortable-container="{$sortableRequest}"{/if}>
 		{foreach $files as $file}
 			<div n:block="#file" class="col-auto text-center mb-5" {if $sortable}data-file-manager-sortable-item="{$file->getId()}"{/if}>
 				<div class="d-inline-block position-relative">
