@@ -60,7 +60,7 @@ class SaveManipulator extends AbstractManipulator implements SaveManipulatorInte
 		$helper = new Options($options);
 		$storage = $this->fileStorageResolver->resolve($fileUpload);
 
-		$resource = $storage->createResourceFromLocalFile(
+		$resource = $storage->createResourceFromFile(
 			$storage->createPathInfo(sprintf('%s/%s', $helper->getNamespace(), $helper->getSourceName($fileUpload))),
 			$fileUpload->getTemporaryFile()
 		);
