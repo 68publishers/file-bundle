@@ -21,7 +21,7 @@
 		"nette/application": "^3.0.6",
 		"nette/di": "^3.0.3",
 		"nette/forms": "^3.0",
-		"nette/utils": "^3.0",
+		"nette/utils": "^3.0 || ^4.0",
 		"ramsey/uuid": "^4.0"
 	},
 	"require-dev": {
