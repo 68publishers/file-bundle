@@ -317,9 +317,8 @@ final class FileManagerControl extends Control implements TranslatorAwareInterfa
 			$dropZone->addSetting('maxFiles', $maxFiles);
 		}
 
-		$dispatcher->addListener(UploadCompletedEvent::NAME, function (UploadCompletedEvent $event) {
+		$dispatcher->addListener(UploadCompletedEvent::NAME, function () {
 			$this->redrawUpload();
-			$this->getEventDispatcher()->dispatch($event, UploadCompletedEvent::NAME);
 		});
 
 		$dispatcher->addListener(FileUploadEvent::NAME, function (FileUploadEvent $event) {
