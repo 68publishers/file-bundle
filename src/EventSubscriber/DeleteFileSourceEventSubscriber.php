@@ -75,6 +75,12 @@ final class DeleteFileSourceEventSubscriber implements EventSubscriber
 			return;
 		}
 
+        if (!$args->getEntityManager()->isOpen()) {
+            $this->queue = new SplQueue();
+
+            return;
+        }
+
 		while (!$this->queue->isEmpty()) {
 			/** @var \SixtyEightPublishers\FileBundle\Entity\FileInterface $file */
 			$file = $this->queue->dequeue();
