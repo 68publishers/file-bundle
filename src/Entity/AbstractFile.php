@@ -109,7 +109,7 @@ abstract class AbstractFile implements FileInterface
 	/**
 	 * {@inheritdoc}
 	 */
-	public function getMetadata(string $key = NULL, $default = NULL)
+	public function getMetadata(?string $key = NULL, $default = NULL)
 	{
 		if (NULL === $key) {
 			return $this->metadata;

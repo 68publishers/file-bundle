@@ -30,7 +30,7 @@ interface FileInterface
 	 *
 	 * @return mixed|array|NULL
 	 */
-	public function getMetadata(string $key = NULL, $default = NULL);
+	public function getMetadata(?string $key = NULL, $default = NULL);
 
 	/**
 	 * @param array $metadata
