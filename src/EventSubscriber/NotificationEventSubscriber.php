@@ -232,6 +232,8 @@ final class NotificationEventSubscriber implements EventSubscriberInterface
 				'Presenter %s does\'t implement method ::redrawMessages(), notifications can\'t be redrawn.',
 				get_class($this->presenter)
 			));
+
+			return;
 		}
 
 		/** @noinspection PhpUndefinedMethodInspection */

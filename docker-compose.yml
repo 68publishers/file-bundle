@@ -1,0 +1,29 @@
+version: "3.7"
+
+services:
+    php83:
+        build:
+            context: .
+            dockerfile: Dockerfile
+            target: php83
+        container_name: 68publishers.file-bundle.83
+        volumes:
+            - .:/var/www/html:cached
+
+    php84:
+        build:
+            context: .
+            dockerfile: Dockerfile
+            target: php84
+        container_name: 68publishers.file-bundle.84
+        volumes:
+            - .:/var/www/html:cached
+
+    php85:
+        build:
+            context: .
+            dockerfile: Dockerfile
+            target: php85
+        container_name: 68publishers.file-bundle.85
+        volumes:
+            - .:/var/www/html:cached

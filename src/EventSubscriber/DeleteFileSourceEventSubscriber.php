@@ -51,7 +51,7 @@ final class DeleteFileSourceEventSubscriber implements EventSubscriber
 	 */
 	public function onFlush(OnFlushEventArgs $args): void
 	{
-		$em = $args->getEntityManager();
+		$em = $args->getObjectManager();
 		$uow = $em->getUnitOfWork();
 
 		foreach ($uow->getScheduledEntityDeletions() as $entity) {
@@ -71,15 +71,15 @@ final class DeleteFileSourceEventSubscriber implements EventSubscriber
 	 */
 	public function postFlush(PostFlushEventArgs $args): void
 	{
-		if (!TransactionHelper::isEverythingCommitted($args->getEntityManager())) {
+		if (!TransactionHelper::isEverythingCommitted($args->getObjectManager())) {
 			return;
 		}
 
-        if (!$args->getEntityManager()->isOpen()) {
-            $this->queue = new SplQueue();
+		if (!$args->getObjectManager()->isOpen()) {
+			$this->queue = new SplQueue();
 
-            return;
-        }
+			return;
+		}
 
 		while (!$this->queue->isEmpty()) {
 			/** @var \SixtyEightPublishers\FileBundle\Entity\FileInterface $file */

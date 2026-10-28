@@ -10,8 +10,8 @@ use Exception;
 final class UploadException extends Exception implements ExceptionInterface
 {
 	public const    INVALID_FILE = 1,
-					UNSUPPORTED_TYPE = 2,
-					MAX_FILES_REACHED = 3;
+		UNSUPPORTED_TYPE = 2,
+		MAX_FILES_REACHED = 3;
 
 	/**
 	 * @return \SixtyEightPublishers\FileBundle\Exception\UploadException

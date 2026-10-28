@@ -1,7 +1,13 @@
 {
 	"name": "68publishers/file-bundle",
 	"description": "File management bundle based on our file-storage for Nette Framework.",
-	"keywords": ["68publishers", "files", "file-bundle", "images", "nette"],
+	"keywords": [
+		"68publishers",
+		"files",
+		"file-bundle",
+		"images",
+		"nette"
+	],
 	"license": "MIT",
 	"authors": [
 		{
@@ -10,27 +16,34 @@
 		}
 	],
 	"require": {
-		"php": "^8.1",
+		"php": "^8.3",
 		"ext-fileinfo": "*",
-		"68publishers/doctrine-bridge": "^1.0",
-		"68publishers/doctrine-persistence": "^0.3",
-		"68publishers/event-dispatcher-extra": "^1.1",
-		"68publishers/file-storage": "^1.3.0",
-		"68publishers/smart-nette-component": "^1.0",
-		"68publishers/translation-bridge": "^2.0",
-		"nette/application": "^3.0.6",
-		"nette/di": "^3.0.3",
-		"nette/forms": "^3.0",
-		"nette/utils": "^3.0 || ^4.0",
-		"ramsey/uuid": "^4.0"
+		"68publishers/doctrine-bridge": "^2.0",
+		"68publishers/doctrine-persistence": "^0.4",
+		"68publishers/event-dispatcher-extra": "^1.4",
+		"68publishers/file-storage": "^2.0",
+		"68publishers/smart-nette-component": "^2.0",
+		"68publishers/translation-bridge": "^3.0",
+		"doctrine/orm": "^2.16 || ^3.0",
+		"nette/application": "^3.1.10",
+		"nette/di": "^3.1.3",
+		"nette/http": "^3.1",
+		"nette/schema": "^1.2",
+		"nette/utils": "^3.2.10 || ^4.0.1",
+		"ramsey/uuid": "^4.0",
+		"symfony/event-dispatcher": "^6.4.3 || ^7.0 || ^8.0"
 	},
 	"require-dev": {
+		"68publishers/image-storage": "^2.0",
+		"68publishers/notification-bundle": "^0.4",
+		"doctrine/annotations": "^1.13 || ^2.0",
+		"friendsofphp/php-cs-fixer": "^3.75",
+		"gedmo/doctrine-extensions": "^3.5",
+		"latte/latte": "^3.0",
+		"nette/bootstrap": "^3.1",
+		"nette/tester": "^2.6",
 		"roave/security-advisories": "dev-latest",
-		"friendsofphp/php-cs-fixer": "^2.0",
-		"nette/tester": "^2.3.4",
-		"68publishers/notification-bundle": "^0.3",
-		"gedmo/doctrine-extensions": "^3.1",
-		"68publishers/image-storage": "^1.5"
+		"symfony/var-exporter": "^6.4 || ^7.0"
 	},
 	"suggest": {
 		"gedmo/doctrine-extensions": "If you want to use soft-deletable files.",
@@ -38,7 +51,8 @@
 		"68publishers/image-storage": "Use combination of file-storage and image-storage to better management of images!"
 	},
 	"conflict": {
-		"68publishers/image-storage": "<1.3"
+		"68publishers/image-storage": "<1.3",
+		"gedmo/doctrine-extensions": "<3.5"
 	},
 	"autoload": {
 		"psr-4": {
@@ -58,11 +72,11 @@
 			"@tests:lowest",
 			"@tests:highest"
 		],
-		"tests:lowest" : [
+		"tests:lowest": [
 			"@composer update --no-progress --prefer-dist --prefer-lowest --prefer-stable",
-			"vendor/bin/tester ./tests"
+			"TESTS_IGNORE_DEPRECATIONS=1 vendor/bin/tester ./tests"
 		],
-		"tests:highest" : [
+		"tests:highest": [
 			"@composer update --no-progress --prefer-dist --prefer-stable",
 			"vendor/bin/tester ./tests"
 		]

@@ -6,20 +6,16 @@ namespace SixtyEightPublishers\FileBundle\Entity;
 
 use DateTimeInterface;
 use Doctrine\ORM\Mapping as ORM;
-use Gedmo\Mapping\Annotation as Gedmo;
 
 /**
- * (!) ADD THIS ANNOTATION INTO YOUR ENTITY:
+ * (!) ADD THIS ATTRIBUTE INTO YOUR ENTITY:
  *
- * @Gedmo\SoftDeleteable(fieldName="deletedAt", timeAware=false)
+ * #[Gedmo\SoftDeleteable(fieldName: 'deletedAt', timeAware: FALSE)]
  */
 trait SoftDeletableFileTrait
 {
-	/**
-	 * @var \DateTime|NULL
-	 *
-	 * @ORM\Column(type="datetime", nullable=true)
-	 */
+	/** @var \DateTime|NULL */
+	#[ORM\Column(type: 'datetime', nullable: TRUE)]
 	protected $deletedAt;
 
 	/**
