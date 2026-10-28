@@ -73,6 +73,49 @@ test('A file manager extends options of another file manager', static function (
 	Assert::count(1, $configurations['a']['actions']);
 });
 
+test('A file manager extends a file manager that is defined later and extends another one', static function (): void {
+	$configurations = getConfigurations(ContainerFactory::create([
+		'entity' => BasicFile::class,
+		'file_managers' => [
+			'c' => [
+				'extends' => 'b',
+				'max_file_size' => 2048,
+			],
+			'b' => [
+				'extends' => 'a',
+				'max_file_size' => 1024,
+			],
+			'a' => [
+				'max_allowed_files' => 3,
+				'max_file_size' => 100,
+			],
+		],
+	]));
+
+	Assert::same(3, $configurations['c']['max_allowed_files']);
+	Assert::same(2048, $configurations['c']['max_file_size']);
+	Assert::same(3, $configurations['b']['max_allowed_files']);
+	Assert::same(1024, $configurations['b']['max_file_size']);
+});
+
+test('An exception is thrown if the inheritance of file managers is cyclic', static function (): void {
+	Assert::exception(
+		static fn () => ContainerFactory::create([
+			'entity' => BasicFile::class,
+			'file_managers' => [
+				'a' => [
+					'extends' => 'b',
+				],
+				'b' => [
+					'extends' => 'a',
+				],
+			],
+		]),
+		InvalidStateException::class,
+		'Inheritance of the file manager with name "a" is cyclic.'
+	);
+});
+
 test('An exception is thrown if the extended file manager is missing', static function (): void {
 	Assert::exception(
 		static fn () => ContainerFactory::create([

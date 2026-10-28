@@ -38,12 +38,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- The option `extends` of `file_managers` always threw an exception (it looked for the extended manager in the non-existent option `image_managers`). It is now resolved on the raw configuration, so only explicitly set options override the options of the extended file manager.
+- The option `extends` of `file_managers` always threw an exception (it looked for the extended manager in the non-existent option `image_managers`). It is now resolved on the raw configuration, so only explicitly set options override the options of the extended file manager. The extended file managers are resolved regardless of the order of the definitions, a cyclic inheritance throws an exception.
 - Relative templates (`template: '@file.latte'` and `dropzone.template`) are resolved relatively to the directory with the default templates. The `@` was never stripped, and the value was resolved as a service reference by Nette DI.
 - `FileBundleExtension::getTargetEntities()` returned a string instead of a `TargetEntity` for soft-deletable entities.
 - `DropZoneControl::handleCompleted()` without the files count caused a `TypeError`.
 - `DropZoneControl::handleUpload()` caused a `TypeError` when the content type of an unsupported file could not be detected.
-- `NotificationEventSubscriber` caused a fatal error after the warning about a presenter without the method `redrawMessages()`.
+- `NotificationEventSubscriber` threw an exception for an AJAX presenter without the method `redrawMessages()` (`Nette\SmartObject::__call()` made the method callable), a warning is triggered instead.
 - PHP 8.4 deprecation of the implicitly nullable parameter `$previous` in `TranslatableException::__construct()`.
 - An invalid character in the message of the exception thrown by `SessionAssociationStorage::setNamespace()`.
 

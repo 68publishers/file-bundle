@@ -61,19 +61,39 @@ final class FileBundleExtension extends CompilerExtension implements EntityMappi
 						return $fileManagers;
 					}
 
-					foreach ($fileManagers as $name => $fileManagerConfig) {
-						if (!isset($fileManagerConfig['extends'])) {
-							continue;
+					# a parent is resolved before its child, so the order of the definitions does not matter
+					$resolved = [];
+					$resolve = static function (string $name, array $children) use (&$resolve, &$fileManagers, &$resolved): array {
+						$fileManagerConfig = $fileManagers[$name];
+
+						if (isset($resolved[$name]) || !isset($fileManagerConfig['extends'])) {
+							return $fileManagerConfig;
 						}
 
-						if (!isset($fileManagers[$fileManagerConfig['extends']])) {
+						$parent = (string) $fileManagerConfig['extends'];
+
+						if (!isset($fileManagers[$parent])) {
 							throw new InvalidStateException(sprintf(
 								'Configuration for file manager with name "%s" is missing.',
-								$fileManagerConfig['extends']
+								$parent
 							));
 						}
 
-						$fileManagers[$name] = Helpers::merge($fileManagerConfig, $fileManagers[$fileManagerConfig['extends']]);
+						if ($parent === $name || in_array($parent, $children, TRUE)) {
+							throw new InvalidStateException(sprintf(
+								'Inheritance of the file manager with name "%s" is cyclic.',
+								$parent
+							));
+						}
+
+						$fileManagers[$name] = Helpers::merge($fileManagerConfig, $resolve($parent, [...$children, $name]));
+						$resolved[$name] = TRUE;
+
+						return $fileManagers[$name];
+					};
+
+					foreach (array_keys($fileManagers) as $name) {
+						$resolve((string) $name, []);
 					}
 
 					return $fileManagers;
