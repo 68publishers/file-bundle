@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace SixtyEightPublishers\FileBundle\Control\FileManager;
 
-use Nette\Utils\Strings;
 use SixtyEightPublishers\FileBundle\Storage\DataStorageInterface;
 use SixtyEightPublishers\FileBundle\Event\DropZoneControlSetupEvent;
 use SixtyEightPublishers\FileBundle\Exception\InvalidArgumentException;
@@ -57,8 +56,8 @@ final class ConfiguredFileManagerControlFactory
 		}
 
 		if (NULL !== $config->get('template')) {
-			if (Strings::startsWith($config->get('template'), '@')) {
-				$control->setRelativeFile($config->get('template'));
+			if (str_starts_with($config->get('template'), '@')) {
+				$control->setRelativeFile(substr($config->get('template'), 1));
 			} else {
 				$control->setFile($config->get('template'));
 			}
@@ -91,8 +90,8 @@ final class ConfiguredFileManagerControlFactory
 			}
 
 			if (NULL !== $config->get('dropzone.template')) {
-				if (Strings::startsWith($config->get('dropzone.template'), '@')) {
-					$control->setRelativeFile($config->get('dropzone.template'));
+				if (str_starts_with($config->get('dropzone.template'), '@')) {
+					$control->setRelativeFile(substr($config->get('dropzone.template'), 1));
 				} else {
 					$control->setFile($config->get('dropzone.template'));
 				}

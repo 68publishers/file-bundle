@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace SixtyEightPublishers\FileBundle\Control\DropZone\Content;
 
 use Nette\Utils\Html;
-use Nette\Utils\IHtmlString;
+use Nette\HtmlStringable;
 
-final class ProgressBar implements IHtmlString
+final class ProgressBar implements HtmlStringable
 {
 	/** @var array  */
 	private $classes = [
@@ -46,7 +46,7 @@ final class ProgressBar implements IHtmlString
 		return $this;
 	}
 
-	/************* interface \Nette\Utils\IHtmlString *************/
+	/************* interface \Nette\HtmlStringable *************/
 
 	/**
 	 * {@inheritdoc}

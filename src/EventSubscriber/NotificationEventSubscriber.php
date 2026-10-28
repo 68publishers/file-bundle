@@ -227,11 +227,14 @@ final class NotificationEventSubscriber implements EventSubscriberInterface
 		}
 
 		# @todo: implement some interface ...
-		if (!is_callable([$this->presenter, 'redrawMessages'])) {
+		# is_callable() is not enough, Nette\SmartObject::__call() makes every method callable
+		if (!method_exists($this->presenter, 'redrawMessages') || !is_callable([$this->presenter, 'redrawMessages'])) {
 			trigger_error(sprintf(
 				'Presenter %s does\'t implement method ::redrawMessages(), notifications can\'t be redrawn.',
 				get_class($this->presenter)
 			));
+
+			return;
 		}
 
 		/** @noinspection PhpUndefinedMethodInspection */

@@ -17,7 +17,7 @@ final class TranslatableException extends Exception implements ExceptionInterfac
 	 * @param int             $code
 	 * @param \Throwable|NULL $previous
 	 */
-	public function __construct(string $message, ?array $args = NULL, int $code = 0, \Throwable $previous = NULL)
+	public function __construct(string $message, ?array $args = NULL, int $code = 0, ?\Throwable $previous = NULL)
 	{
 		parent::__construct($message, $code, $previous);
 

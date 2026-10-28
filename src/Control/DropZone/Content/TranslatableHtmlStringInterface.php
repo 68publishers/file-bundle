@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace SixtyEightPublishers\FileBundle\Control\DropZone\Content;
 
-use Nette\Utils\IHtmlString;
-use Nette\Localization\ITranslator;
+use Nette\HtmlStringable;
+use Nette\Localization\Translator;
 
-interface TranslatableHtmlStringInterface extends IHtmlString
+interface TranslatableHtmlStringInterface extends HtmlStringable
 {
 	/**
 	 * @return string
@@ -15,9 +15,9 @@ interface TranslatableHtmlStringInterface extends IHtmlString
 	public function __toString(): string;
 
 	/**
-	 * @param \Nette\Localization\ITranslator $translator
+	 * @param \Nette\Localization\Translator $translator
 	 *
 	 * @return void
 	 */
-	public function setTranslator(ITranslator $translator): void;
+	public function setTranslator(Translator $translator): void;
 }

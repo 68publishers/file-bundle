@@ -13,46 +13,29 @@ use Ramsey\Uuid\UuidInterface;
 use Doctrine\ORM\Mapping as ORM;
 use SixtyEightPublishers\FileStorage\FileInfoInterface;
 
-/**
- * @ORM\MappedSuperclass
- * @ORM\HasLifecycleCallbacks()
- */
+#[ORM\MappedSuperclass]
+#[ORM\HasLifecycleCallbacks]
 abstract class AbstractFile implements FileInterface
 {
-	/**
-	 * @ORM\Id
-	 * @ORM\Column(type="uuid", unique=true)
-	 *
-	 * @var \Ramsey\Uuid\UuidInterface
-	 */
+	/** @var \Ramsey\Uuid\UuidInterface */
+	#[ORM\Id]
+	#[ORM\Column(type: 'uuid', unique: TRUE)]
 	protected $id;
 
-	/**
-	 * @ORM\Column(type="datetime")
-	 *
-	 * @var \DateTime
-	 */
+	/** @var \DateTime */
+	#[ORM\Column(type: 'datetime')]
 	protected $created;
 
-	/**
-	 * @ORM\Column(type="datetime")
-	 *
-	 * @var \DateTime
-	 */
+	/** @var \DateTime */
+	#[ORM\Column(type: 'datetime')]
 	protected $updated;
 
-	/**
-	 * @ORM\Column(type="file_info")
-	 *
-	 * @var \SixtyEightPublishers\FileStorage\FileInfoInterface
-	 */
+	/** @var \SixtyEightPublishers\FileStorage\FileInfoInterface */
+	#[ORM\Column(type: 'file_info')]
 	protected $source;
 
-	/**
-	 * @ORM\Column(type="json", options={"jsonb": true})
-	 *
-	 * @var array
-	 */
+	/** @var array */
+	#[ORM\Column(type: 'json', options: ['jsonb' => TRUE])]
 	protected $metadata = [];
 
 	/**
@@ -72,11 +55,11 @@ abstract class AbstractFile implements FileInterface
 
 	/**
 	 * @internal
-	 * @ORM\PreUpdate
 	 *
 	 * @return void
 	 * @throws \Exception
 	 */
+	#[ORM\PreUpdate]
 	public function onPreUpdate(): void
 	{
 		$this->update();

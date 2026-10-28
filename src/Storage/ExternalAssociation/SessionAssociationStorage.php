@@ -67,7 +67,7 @@ class SessionAssociationStorage implements ExternalAssociationStorageInterface
 	public function setNamespace(string $namespace): void
 	{
 		if (NULL !== $this->sessionSection) {
-			throw new InvalidStateException('A namespace can￿\'t be changed if a session section was already created.');
+			throw new InvalidStateException('A namespace can\'t be changed if a session section was already created.');
 		}
 
 		$this->namespace = $namespace;

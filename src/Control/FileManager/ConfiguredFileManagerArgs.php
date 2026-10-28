@@ -39,7 +39,7 @@ final class ConfiguredFileManagerArgs
 
 	/**
 	 * @param string $key
-	 * @param $value
+	 * @param        $value
 	 *
 	 * @return \SixtyEightPublishers\FileBundle\Control\FileManager\ConfiguredFileManagerArgs
 	 */

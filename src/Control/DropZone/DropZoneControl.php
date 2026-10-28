@@ -6,10 +6,9 @@ namespace SixtyEightPublishers\FileBundle\Control\DropZone;
 
 use Nette\Utils\Json;
 use Nette\Http\IRequest;
-use Nette\Utils\Strings;
+use Nette\HtmlStringable;
 use Nette\Http\IResponse;
 use Nette\Http\FileUpload;
-use Nette\Utils\IHtmlString;
 use Nette\Application\UI\Control;
 use SixtyEightPublishers\FileBundle\Event\FileUploadEvent;
 use SixtyEightPublishers\FileBundle\Event\UploadErrorEvent;
@@ -47,7 +46,7 @@ final class DropZoneControl extends Control implements TranslatorAwareInterface,
 	/** @var NULL|string */
 	private $dropZoneId;
 
-	/** @var \Nette\Utils\IHtmlString[] */
+	/** @var \Nette\HtmlStringable[] */
 	private $contentHtml = [];
 
 	/** @var array */
@@ -78,7 +77,7 @@ final class DropZoneControl extends Control implements TranslatorAwareInterface,
 			}
 
 			if (!$this->isUploadAcceptable($file)) {
-				throw UploadException::unsupportedType($file->getContentType());
+				throw UploadException::unsupportedType($file->getContentType() ?? $file->getUntrustedName());
 			}
 
 			$this->eventDispatcher->dispatch(new FileUploadEvent($file), FileUploadEvent::NAME);
@@ -97,7 +96,7 @@ final class DropZoneControl extends Control implements TranslatorAwareInterface,
 	 */
 	public function handleCompleted(?int $filesCount = NULL): void
 	{
-		$this->eventDispatcher->dispatch(new UploadCompletedEvent($filesCount), UploadCompletedEvent::NAME);
+		$this->eventDispatcher->dispatch(new UploadCompletedEvent($filesCount ?? 0), UploadCompletedEvent::NAME);
 	}
 
 	/**
@@ -123,11 +122,11 @@ final class DropZoneControl extends Control implements TranslatorAwareInterface,
 	}
 
 	/**
-	 * @param \Nette\Utils\IHtmlString $htmlString
+	 * @param \Nette\HtmlStringable $htmlString
 	 *
 	 * @return \SixtyEightPublishers\FileBundle\Control\DropZone\DropZoneControl
 	 */
-	public function addContentHtml(IHtmlString $htmlString): self
+	public function addContentHtml(HtmlStringable $htmlString): self
 	{
 		if ($htmlString instanceof Content\TranslatableHtmlStringInterface) {
 			$htmlString->setTranslator($this->getPrefixedTranslator());
@@ -250,7 +249,7 @@ final class DropZoneControl extends Control implements TranslatorAwareInterface,
 		$name = $upload->getUntrustedName();
 
 		foreach ($this->acceptedExtensions as $acceptedExtension) {
-			if (Strings::endsWith($name, $acceptedExtension)) {
+			if (str_ends_with($name, $acceptedExtension)) {
 				return TRUE;
 			}
 		}

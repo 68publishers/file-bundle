@@ -8,6 +8,7 @@ use Nette\Schema\Expect;
 use Nette\Schema\Schema;
 use Nette\Schema\Helpers;
 use Nette\DI\CompilerExtension;
+use SixtyEightPublishers\FileBundle\Entity\AbstractFile;
 use SixtyEightPublishers\FileBundle\Entity\FileInterface;
 use SixtyEightPublishers\FileBundle\Storage\DataStorageFactory;
 use SixtyEightPublishers\FileBundle\Entity\Basic\File as BasicFile;
@@ -52,7 +53,51 @@ final class FileBundleExtension extends CompilerExtension implements EntityMappi
 			'entity' => Expect::string()->assert(static function (string $className) {
 				return is_subclass_of($className, FileInterface::class, TRUE);
 			}),
-			'file_managers' => Expect::arrayOf(Configuration::getSchema(TRUE)),
+			'file_managers' => Expect::arrayOf(Configuration::getSchema(TRUE))
+				->before(static function ($fileManagers) {
+					# `extends` is resolved on raw configs, so only explicitly set options override the parent's ones
+					# the parent must be defined in the same config file as the child, Nette normalizes every config file separately
+					if (!is_array($fileManagers)) {
+						return $fileManagers;
+					}
+
+					# a parent is resolved before its child, so the order of the definitions does not matter
+					$resolved = [];
+					$resolve = static function (string $name, array $children) use (&$resolve, &$fileManagers, &$resolved): array {
+						$fileManagerConfig = $fileManagers[$name];
+
+						if (isset($resolved[$name]) || !isset($fileManagerConfig['extends'])) {
+							return $fileManagerConfig;
+						}
+
+						$parent = (string) $fileManagerConfig['extends'];
+
+						if (!isset($fileManagers[$parent])) {
+							throw new InvalidStateException(sprintf(
+								'Configuration for file manager with name "%s" is missing.',
+								$parent
+							));
+						}
+
+						if ($parent === $name || in_array($parent, $children, TRUE)) {
+							throw new InvalidStateException(sprintf(
+								'Inheritance of the file manager with name "%s" is cyclic.',
+								$parent
+							));
+						}
+
+						$fileManagers[$name] = Helpers::merge($fileManagerConfig, $resolve($parent, [...$children, $name]));
+						$resolved[$name] = TRUE;
+
+						return $fileManagers[$name];
+					};
+
+					foreach (array_keys($fileManagers) as $name) {
+						$resolve((string) $name, []);
+					}
+
+					return $fileManagers;
+				}),
 		]);
 	}
 
@@ -122,18 +167,11 @@ final class FileBundleExtension extends CompilerExtension implements EntityMappi
 			->setType(ConfiguredFileManagerControlFactory::class);
 
 		foreach ($this->config->file_managers as $name => $fileManagerConfig) {
-			if (isset($fileManagerConfig['extends'])) {
-				if (!isset($config->image_managers[$fileManagerConfig['extends']])) {
-					throw new InvalidStateException(sprintf(
-						'Configuration for file manager with name "%s" is missing.',
-						$fileManagerConfig['extends']
-					));
-				}
-
-				$fileManagerConfig = Helpers::merge($fileManagerConfig, $this->config->image_managers[$fileManagerConfig['extends']]);
-			}
-
 			unset($fileManagerConfig['extends']);
+
+			# relative templates (`@file.latte`) must be escaped, otherwise they are resolved as service references
+			$fileManagerConfig['template'] = $this->escapeAtSign($fileManagerConfig['template']);
+			$fileManagerConfig['dropzone']['template'] = $this->escapeAtSign($fileManagerConfig['dropzone']['template']);
 
 			foreach ($fileManagerConfig['manipulators'] as $i => $manipulator) {
 				$fileManagerConfig['manipulators'][$i] = $builder->addDefinition($this->prefix('manipulator.' . $name . '.' . $i))
@@ -178,15 +216,19 @@ final class FileBundleExtension extends CompilerExtension implements EntityMappi
 		switch ($this->config->entity) {
 			case BasicFile::class:
 				return [
-					new EntityMapping(EntityMapping::DRIVER_ANNOTATION, 'SixtyEightPublishers\FileBundle\Entity', __DIR__ . '/../Entity/Basic'),
+					new EntityMapping(EntityMapping::DRIVER_ATTRIBUTE, 'SixtyEightPublishers\FileBundle\Entity', __DIR__ . '/../Entity/Basic'),
 				];
 			case SoftDeletableFile::class:
 				return [
-					new EntityMapping(EntityMapping::DRIVER_ANNOTATION, 'SixtyEightPublishers\FileBundle\Entity', __DIR__ . '/../Entity/SoftDeletable'),
+					new EntityMapping(EntityMapping::DRIVER_ATTRIBUTE, 'SixtyEightPublishers\FileBundle\Entity', __DIR__ . '/../Entity/SoftDeletable'),
 				];
 		}
 
-		return [];
+		# A custom entity (mapped by the application) can extend the mapped superclass AbstractFile.
+		# The class name as the namespace prefix limits the mapping to AbstractFile, the bundled entities are not mapped.
+		return [
+			new EntityMapping(EntityMapping::DRIVER_ATTRIBUTE, AbstractFile::class, __DIR__ . '/../Entity'),
+		];
 	}
 
 	/**
@@ -200,7 +242,7 @@ final class FileBundleExtension extends CompilerExtension implements EntityMappi
 		];
 
 		if (is_subclass_of($entityClassName, SoftDeletableFileInterface::class, TRUE)) {
-			$targetEntities[SoftDeletableFileInterface::class] = $entityClassName;
+			$targetEntities[] = new TargetEntity(SoftDeletableFileInterface::class, $entityClassName);
 		}
 
 		return $targetEntities;
@@ -214,5 +256,15 @@ final class FileBundleExtension extends CompilerExtension implements EntityMappi
 		return [
 			__DIR__ . '/../translations',
 		];
+	}
+
+	/**
+	 * @param string|NULL $value
+	 *
+	 * @return string|NULL
+	 */
+	private function escapeAtSign(?string $value): ?string
+	{
+		return NULL !== $value && str_starts_with($value, '@') && !str_starts_with($value, '@@') ? '@' . $value : $value;
 	}
 }
